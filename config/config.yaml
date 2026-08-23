@@ -1,0 +1,20 @@
+# Model/provider selection lives here so it's a one-line edit, not a code
+# change, when a free-tier model gets deprecated or rate-limited (see
+# docs/DECISIONS.md #7 and docs/FREE_TIER_LIMITS.md).
+
+provider:
+  primary: gemini
+  # fallback: groq   # interface exists (src/providers/base_provider.py)
+                      # but NOT wired up yet — see docs/DECISIONS.md #4
+
+gemini:
+  # Verify this against https://ai.google.dev/gemini-api/docs/models
+  # before relying on it — free-tier model availability shifts often.
+  model: "gemini-flash-latest"
+  # Bump this whenever you change the prompt template in
+  # src/providers/gemini_provider.py. It's part of the cache key, so a
+  # bump forces regeneration instead of silently serving stale output.
+  prompt_version: 2   # bumped from 1 — concept-card schema (see DECISIONS.md #8)
+
+cache:
+  dir: "./cache"
