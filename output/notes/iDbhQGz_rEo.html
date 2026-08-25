@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Machine Learning Development Life Cycle (MLDLC)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fdfcf3;
+  --ink: #2b2b2b;
+  --ink-soft: #45494a;
+  --line: #b9d4e8;
+  --margin-line: #e2a3a3;
+  --accent: #2c5f7c;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #e7e2d6;
+  font-family: 'Kalam', cursive;
+  color: var(--ink);
+}
+
+/* Scroll-snap container — this IS the "book". Each .sheet inside it is
+   one page; navigating snaps to whichever sheet is next, left-to-right,
+   like actually turning pages rather than scrolling down a list. */
+.book {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+}
+
+.sheet {
+  flex: 0 0 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+.sheet-inner {
+  max-width: 780px;
+  width: 100%;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background:
+    repeating-linear-gradient(
+      var(--paper),
+      var(--paper) 34px,
+      var(--line) 35px
+    );
+  background-attachment: local;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  padding: 44px 36px 44px 66px;
+  position: relative;
+}
+
+.sheet-inner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 42px;
+  width: 2px;
+  background: var(--margin-line);
+  opacity: 0.6;
+}
+
+h1.title {
+  font-size: 2.1em;
+  margin: 0 0 4px 0;
+  color: var(--accent);
+  transform: rotate(-0.4deg);
+}
+
+p.overview {
+  font-size: 1.15em;
+  color: var(--ink-soft);
+  margin-top: 20px;
+}
+
+.concept h2 {
+  font-size: 1.6em;
+  margin: 0 0 14px 0;
+  color: var(--accent);
+  display: inline-block;
+  transform: rotate(-0.3deg);
+}
+
+.field-label {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1.05em;
+  margin-top: 14px;
+}
+
+.field-body {
+  margin: 2px 0 0 4px;
+  font-size: 1.08em;
+  line-height: 1.55;
+}
+
+.syntax-box {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  background: #f4f1e6;
+  border: 1px solid #d8d2bd;
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  padding: 10px 14px;
+  margin-top: 6px;
+  white-space: pre-wrap;
+  color: #333;
+}
+
+.key-points {
+  margin: 4px 0 0 20px;
+  padding: 0;
+}
+
+.key-points li {
+  margin-bottom: 4px;
+  font-size: 1.08em;
+}
+
+.diagram-title {
+  font-weight: 700;
+  font-size: 1.4em;
+  margin-bottom: 14px;
+  color: var(--accent);
+  transform: rotate(-0.3deg);
+}
+
+pre.mermaid {
+  background: #fbfaf3;
+  border: 1px solid #d8d2bd;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+/* Nav bar — fixed, sits above the book */
+.nav {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(43, 43, 43, 0.85);
+  color: #fdfcf3;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  z-index: 10;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.nav button {
+  background: none;
+  border: none;
+  color: #fdfcf3;
+  font-family: 'Kalam', cursive;
+  font-size: 1.1em;
+  cursor: pointer;
+  padding: 2px 8px;
+}
+
+.nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav .counter {
+  min-width: 70px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+  <div class="book">
+    
+    <section class="sheet">
+      <div class="sheet-inner">
+        <h1 class="title">Machine Learning Development Life Cycle (MLDLC)</h1>
+        <p class="overview">This lecture outlines the end-to-end Machine Learning Development Life Cycle (MLDLC/MLDC), presenting a standard 9-step roadmap for taking machine learning ideas from initial problem framing to deployment and production optimization.</p>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Machine Learning Development Life Cycle (MLDLC)</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">A standardized set of guidelines and procedural phases used across the industry to build, deploy, and maintain end-to-end ML-based software products.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Modeled after the Software Development Life Cycle (SDLC), MLDLC structures ML projects into distinct iterative stages covering problem formulation, data processing, modeling, deployment, and post-launch maintenance.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Iterative framework bridging research/experimentation and production software.</li><li>Prevents common beginner mistake of only training models and stopping after measuring accuracy.</li><li>Required standard for developing production-grade, end-to-end ML applications.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use as a foundational development blueprint for any enterprise or production-level machine learning project.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 1: Frame the Problem</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The requirement-gathering and scoping phase where business goals and technical problem architectures are defined.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">The team clarifies client goals, target audience, budget, team size, and defines whether the problem is supervised/unsupervised, online/batch, and which class of ML algorithms to consider.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Defines end-product vision, KPIs, and operational constraints early to avoid costly mid-project redesigns.</li><li>Determines data requirements and system execution modes (offline batch vs. real-time online inference).</li><li>Establishes initial feasibility and business value.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use at the very beginning of a project before writing any code or gathering data.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 2: Gathering Data</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The process of collecting relevant raw data required to train machine learning models from internal or external sources.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Data is sourced via direct CSV files, hitting APIs returning JSON, web scraping unstructured web pages, extracting from operational databases/data warehouses via ETL pipelines, or querying distributed cluster tools like Apache Spark for big data.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Real-world data is rarely readily available in single clean files compared to academic/competition datasets.</li><li>Utilizes techniques like ETL (Extract, Transform, Load) to feed data from production databases into warehouses.</li><li>Must store gathered data in formats readily accessible for pre-processing.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use right after problem framing to assemble the training and validation datasets.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 3: Data Preprocessing</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">Cleaning raw data and preparing its structure to make it suitable and safe for machine learning algorithms.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Transforms noisy or dirty data by removing duplicates, handling missing values, removing outliers, and applying feature scaling (such as standardization or normalization) to bring features to comparable scales.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Prevents garbage-in, garbage-out failure modes in mathematical optimization algorithms.</li><li>Handles data compatibility and structural inconsistencies across multiple sources.</li><li>Scaling prevents distance-based algorithms from being biased toward large-magnitude numbers.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use immediately after raw data acquisition to sanitize inputs prior to analysis and model consumption.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 4: Exploratory Data Analysis (EDA)</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The analytical process of investigating dataset characteristics, distributions, patterns, and anomalies using visualization and statistical methods.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Applies univariate analysis (analyzing single features via mean, variance, distribution curves), bivariate analysis (correlating feature pairs), multivariate analysis, outlier detection, and imbalance checks (e.g., class distribution analysis in classification).</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Provides concrete understanding of hidden relationships between input features and target outputs.</li><li>Identifies class imbalances and data skews that dictate future modeling strategies.</li><li>Functions as the &#x27;tool-sharpening&#x27; phase that drastically speeds up downstream modeling decisions.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use after data cleaning to extract statistical insights and guide feature engineering.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 5: Feature Engineering and Selection</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">Creating new informative features and filtering down existing variables to only those that positively contribute to model performance.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Feature engineering transforms or combines existing raw attributes into domain-meaningful columns (e.g., combining room and bathroom counts into square footage). Feature selection evaluates and drops redundant, non-impactful, or noisy features.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Reduces dimensionality to speed up training and prevent the curse of dimensionality.</li><li>Domain-specific features directly boost machine learning model predictive power.</li><li>Removes irrelevant features that do not significantly influence the output.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use after EDA to optimize the input feature representation prior to training models.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 6: Model Training, Evaluation, and Selection</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The iterative experimentation phase where multiple ML algorithms are trained, hyperparameter-tuned, evaluated against performance metrics, or combined via ensembles.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Diverse algorithm families (linear models, tree ensembles, neural networks) are trained on prepared data. Performance is measured using domain metrics (Accuracy, Mean Squared Error, Dunn&#x27;s Index). Models are tuned via hyperparameter tuning, and multiple models may be combined using ensemble techniques (bagging, boosting, stacking).</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Never rely on a single algorithm; benchmark across multiple algorithmic paradigms.</li><li>Hyperparameter tuning optimizes settings to squeeze maximum performance out of selected algorithms.</li><li>Ensemble learning aggregates predictions from multiple diverse models to boost overall accuracy and robustness.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use to discover, tune, and validate the most effective model for the target problem.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 7: Model Deployment</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The process of integrating the trained model into a production environment where it can receive inputs and serve live inference requests to end-users.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">The model is serialized into a binary format (e.g., using Python&#x27;s `pickle`), wrapped into an API endpoint, hosted on a backend server (e.g., Heroku, AWS, GCP), and integrated with user-facing clients (web or mobile apps) via JSON request/response pipelines.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Converts an experimental model artifact into an accessible software service.</li><li>Decouples model inference logic from user interface via REST APIs.</li><li>Requires cloud infrastructure setup (AWS, GCP, Heroku) to manage availability.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use once a candidate model passes offline validation and is ready for integration into production software.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 8: Testing (A/B Testing)</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">Validating the newly deployed model against real-world users under live production conditions.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">The model is rolled out progressively to a subset of trusted or randomized users (beta testing / A/B testing). User interaction, accuracy, and operational feedback are compared against baselines before wider rollout.</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Mitigates business risk by preventing sudden catastrophic failures across the full user base.</li><li>Identifies regressions and discrepancies between offline validation data and real user data.</li><li>Triggers feedback loops to revisit earlier pipeline stages if live metrics fall below expectations.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use immediately after deployment to assess live production impact before 100% rollout.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Stage 9: Optimization &amp; Maintenance</h2>
+
+        <div class="field-label">What it is</div>
+        <div class="field-body">The continuous operations, scalability management, and retraining lifecycle required to keep the production ML system reliable and performant.</div>
+
+        <div class="field-label">How it works</div>
+        <div class="field-body">Engineers configure model/database backup and rollback mechanisms, set up server load balancers for traffic spikes, and automate retraining pipelines to counter model rotting (drift caused by evolving real-world data patterns).</div>
+
+        
+
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Counteracts model rotting (performance degradation over time due to data/concept drift).</li><li>Requires defined retraining schedules (e.g., weekly or monthly) and automation.</li><li>Maintains high availability using load balancing, automated rollbacks, and disaster recovery backups.</li></ul>
+
+        <div class="field-label">When to use</div>
+        <div class="field-body">Use continuously throughout the entire operational lifetime of a deployed production ML system.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner">
+        <div class="diagram-title">[1] Machine Learning Development Life Cycle (MLDLC) Workflow</div>
+        <pre class="mermaid">graph TD
+    A[1. Frame the Problem] --&gt; B[2. Gathering Data]
+    B --&gt; C[3. Data Preprocessing]
+    C --&gt; D[4. Exploratory Data Analysis - EDA]
+    D --&gt; E[5. Feature Engineering &amp; Selection]
+    E --&gt; F[6. Model Training, Evaluation &amp; Selection]
+    F --&gt; G[7. Model Deployment]
+    G --&gt; H[8. Testing / A-B Testing]
+    H --&gt;|Feedback / Issues Detected| C
+    H --&gt;|Verified Performance| I[9. Optimization &amp; Maintenance]
+    I --&gt;|Model Rotting / Drift Detected| B</pre>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner">
+        <div class="diagram-title">[2] Model Deployment &amp; Inference Pipeline</div>
+        <pre class="mermaid">sequenceDiagram
+    autonumber
+    actor User
+    participant Frontend as Web/Mobile App
+    participant Backend as Python Server
+    participant API as Model API / Binary Pickle
+    
+    User-&gt;&gt;Frontend: Enters input data via form
+    Frontend-&gt;&gt;Backend: Sends request data
+    Backend-&gt;&gt;API: Forwards inputs to Model API
+    API-&gt;&gt;API: Computes prediction (Serialized Model)
+    API--&gt;&gt;Backend: Returns prediction in JSON
+    Backend--&gt;&gt;Frontend: Sends JSON response
+    Frontend--&gt;&gt;User: Displays result to User</pre>
+      </div>
+    </section>
+    
+  </div>
+
+  <div class="nav">
+    <button id="prevBtn">&larr; Prev</button>
+    <span class="counter" id="pageCounter"></span>
+    <button id="nextBtn">Next &rarr;</button>
+  </div>
+
+<script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, look: 'handDrawn', theme: 'neutral' });</script>
+
+<script>
+  const book = document.querySelector('.book');
+  const sheets = Array.from(document.querySelectorAll('.sheet'));
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const counter = document.getElementById('pageCounter');
+  let current = 0;
+
+  function updateUI() {
+    counter.textContent = `Page ${current + 1} / ${sheets.length}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === sheets.length - 1;
+  }
+
+  function goTo(index) {
+    if (index < 0 || index >= sheets.length) return;
+    current = index;
+    sheets[current].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    updateUI();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+  });
+
+  // Keep the counter/buttons in sync if the user scrolls manually
+  // instead of clicking Prev/Next.
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        current = sheets.indexOf(entry.target);
+        updateUI();
+      }
+    });
+  }, { root: book, threshold: 0.6 });
+
+  sheets.forEach((s) => observer.observe(s));
+
+  updateUI();
+</script>
+
+</body>
+</html>

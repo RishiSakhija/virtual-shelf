@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from generation.notes_generator import NotesGenerator
+from render.notes_renderer import render_notes_html
+from utils.youtube import extract_video_id
 
 _WRAP_WIDTH = 78
 
@@ -109,7 +111,18 @@ def main():
         json.dump(result, f, indent=2)
     print(f"\n(full JSON also written to {out_path})")
 
+    # Render to a PREDICTABLE path keyed by video_id, not the ad-hoc
+    # filename notes_renderer.py takes when run standalone. This is what
+    # lets Step 3's bookshelf link to a book without guessing a filename —
+    # every video's rendered page always lives at the same place.
+    video_id = extract_video_id(args.url)
+    notes_dir = Path("output") / "notes"
+    notes_dir.mkdir(parents=True, exist_ok=True)
+    note_path = notes_dir / f"{video_id}.html"
+    with open(note_path, "w", encoding="utf-8") as f:
+        f.write(render_notes_html(result))
+    print(f"(rendered note -> {note_path})")
+
 
 if __name__ == "__main__":
     main()
-    
