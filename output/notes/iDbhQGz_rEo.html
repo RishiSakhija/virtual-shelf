@@ -25,9 +25,6 @@ html, body {
   color: var(--ink);
 }
 
-/* Scroll-snap container — this IS the "book". Each .sheet inside it is
-   one page; navigating snaps to whichever sheet is next, left-to-right,
-   like actually turning pages rather than scrolling down a list. */
 .book {
   height: 100vh;
   width: 100vw;
@@ -48,10 +45,13 @@ html, body {
   padding: 30px 20px;
 }
 
+/* FIXED height, not max-height — this is what makes every page the
+   same size regardless of content length. Overflow scrolls WITHIN
+   the page instead of the page itself resizing. */
 .sheet-inner {
   max-width: 780px;
   width: 100%;
-  max-height: calc(100vh - 100px);
+  height: 720px;
   overflow-y: auto;
   background:
     repeating-linear-gradient(
@@ -150,7 +150,6 @@ pre.mermaid {
   overflow-x: auto;
 }
 
-/* Nav bar — fixed, sits above the book */
 .nav {
   position: fixed;
   bottom: 18px;
@@ -203,18 +202,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Machine Learning Development Life Cycle (MLDLC)</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">A standardized set of guidelines and procedural phases used across the industry to build, deploy, and maintain end-to-end ML-based software products.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Modeled after the Software Development Life Cycle (SDLC), MLDLC structures ML projects into distinct iterative stages covering problem formulation, data processing, modeling, deployment, and post-launch maintenance.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Iterative framework bridging research/experimentation and production software.</li><li>Prevents common beginner mistake of only training models and stopping after measuring accuracy.</li><li>Required standard for developing production-grade, end-to-end ML applications.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use as a foundational development blueprint for any enterprise or production-level machine learning project.</div>
       </div>
@@ -223,18 +217,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 1: Frame the Problem</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The requirement-gathering and scoping phase where business goals and technical problem architectures are defined.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">The team clarifies client goals, target audience, budget, team size, and defines whether the problem is supervised/unsupervised, online/batch, and which class of ML algorithms to consider.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Defines end-product vision, KPIs, and operational constraints early to avoid costly mid-project redesigns.</li><li>Determines data requirements and system execution modes (offline batch vs. real-time online inference).</li><li>Establishes initial feasibility and business value.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use at the very beginning of a project before writing any code or gathering data.</div>
       </div>
@@ -243,18 +232,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 2: Gathering Data</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The process of collecting relevant raw data required to train machine learning models from internal or external sources.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Data is sourced via direct CSV files, hitting APIs returning JSON, web scraping unstructured web pages, extracting from operational databases/data warehouses via ETL pipelines, or querying distributed cluster tools like Apache Spark for big data.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Real-world data is rarely readily available in single clean files compared to academic/competition datasets.</li><li>Utilizes techniques like ETL (Extract, Transform, Load) to feed data from production databases into warehouses.</li><li>Must store gathered data in formats readily accessible for pre-processing.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use right after problem framing to assemble the training and validation datasets.</div>
       </div>
@@ -263,18 +247,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 3: Data Preprocessing</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">Cleaning raw data and preparing its structure to make it suitable and safe for machine learning algorithms.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Transforms noisy or dirty data by removing duplicates, handling missing values, removing outliers, and applying feature scaling (such as standardization or normalization) to bring features to comparable scales.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Prevents garbage-in, garbage-out failure modes in mathematical optimization algorithms.</li><li>Handles data compatibility and structural inconsistencies across multiple sources.</li><li>Scaling prevents distance-based algorithms from being biased toward large-magnitude numbers.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use immediately after raw data acquisition to sanitize inputs prior to analysis and model consumption.</div>
       </div>
@@ -283,18 +262,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 4: Exploratory Data Analysis (EDA)</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The analytical process of investigating dataset characteristics, distributions, patterns, and anomalies using visualization and statistical methods.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Applies univariate analysis (analyzing single features via mean, variance, distribution curves), bivariate analysis (correlating feature pairs), multivariate analysis, outlier detection, and imbalance checks (e.g., class distribution analysis in classification).</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Provides concrete understanding of hidden relationships between input features and target outputs.</li><li>Identifies class imbalances and data skews that dictate future modeling strategies.</li><li>Functions as the &#x27;tool-sharpening&#x27; phase that drastically speeds up downstream modeling decisions.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use after data cleaning to extract statistical insights and guide feature engineering.</div>
       </div>
@@ -303,18 +277,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 5: Feature Engineering and Selection</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">Creating new informative features and filtering down existing variables to only those that positively contribute to model performance.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Feature engineering transforms or combines existing raw attributes into domain-meaningful columns (e.g., combining room and bathroom counts into square footage). Feature selection evaluates and drops redundant, non-impactful, or noisy features.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Reduces dimensionality to speed up training and prevent the curse of dimensionality.</li><li>Domain-specific features directly boost machine learning model predictive power.</li><li>Removes irrelevant features that do not significantly influence the output.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use after EDA to optimize the input feature representation prior to training models.</div>
       </div>
@@ -323,18 +292,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 6: Model Training, Evaluation, and Selection</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The iterative experimentation phase where multiple ML algorithms are trained, hyperparameter-tuned, evaluated against performance metrics, or combined via ensembles.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Diverse algorithm families (linear models, tree ensembles, neural networks) are trained on prepared data. Performance is measured using domain metrics (Accuracy, Mean Squared Error, Dunn&#x27;s Index). Models are tuned via hyperparameter tuning, and multiple models may be combined using ensemble techniques (bagging, boosting, stacking).</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Never rely on a single algorithm; benchmark across multiple algorithmic paradigms.</li><li>Hyperparameter tuning optimizes settings to squeeze maximum performance out of selected algorithms.</li><li>Ensemble learning aggregates predictions from multiple diverse models to boost overall accuracy and robustness.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use to discover, tune, and validate the most effective model for the target problem.</div>
       </div>
@@ -343,18 +307,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 7: Model Deployment</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The process of integrating the trained model into a production environment where it can receive inputs and serve live inference requests to end-users.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">The model is serialized into a binary format (e.g., using Python&#x27;s `pickle`), wrapped into an API endpoint, hosted on a backend server (e.g., Heroku, AWS, GCP), and integrated with user-facing clients (web or mobile apps) via JSON request/response pipelines.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Converts an experimental model artifact into an accessible software service.</li><li>Decouples model inference logic from user interface via REST APIs.</li><li>Requires cloud infrastructure setup (AWS, GCP, Heroku) to manage availability.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use once a candidate model passes offline validation and is ready for integration into production software.</div>
       </div>
@@ -363,18 +322,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 8: Testing (A/B Testing)</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">Validating the newly deployed model against real-world users under live production conditions.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">The model is rolled out progressively to a subset of trusted or randomized users (beta testing / A/B testing). User interaction, accuracy, and operational feedback are compared against baselines before wider rollout.</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Mitigates business risk by preventing sudden catastrophic failures across the full user base.</li><li>Identifies regressions and discrepancies between offline validation data and real user data.</li><li>Triggers feedback loops to revisit earlier pipeline stages if live metrics fall below expectations.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use immediately after deployment to assess live production impact before 100% rollout.</div>
       </div>
@@ -383,18 +337,13 @@ pre.mermaid {
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>Stage 9: Optimization &amp; Maintenance</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">The continuous operations, scalability management, and retraining lifecycle required to keep the production ML system reliable and performant.</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">Engineers configure model/database backup and rollback mechanisms, set up server load balancers for traffic spikes, and automate retraining pipelines to counter model rotting (drift caused by evolving real-world data patterns).</div>
-
         
-
         <div class="field-label">Key points</div>
         <ul class="key-points"><li>Counteracts model rotting (performance degradation over time due to data/concept drift).</li><li>Requires defined retraining schedules (e.g., weekly or monthly) and automation.</li><li>Maintains high availability using load balancing, automated rollbacks, and disaster recovery backups.</li></ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">Use continuously throughout the entire operational lifetime of a deployed production ML system.</div>
       </div>
@@ -476,8 +425,6 @@ pre.mermaid {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
   });
 
-  // Keep the counter/buttons in sync if the user scrolls manually
-  // instead of clicking Prev/Next.
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {

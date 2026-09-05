@@ -1,44 +1,59 @@
 """
-Step 2: render structured notes JSON into a standalone, paginated
-handwritten-style HTML file — real flip-through pages, not one long scroll.
+Step 2: render structured notes JSON into a standalone handwritten-style
+HTML file — paginated with horizontal scroll-snap, Prev/Next + arrow-key
+navigation.
+
+Reverted [this session] from a StPageFlip-based real page-curl version.
+Worth recording honestly why: StPageFlip produced a genuine curl
+animation and did fix page-size uniformity, but introduced a persistent
+bug where content from one page bled into another with wrong styling —
+survived three rounds of config changes and confirmed NOT caused by
+file:// origin restrictions (same bug over a real localhost server). Kept
+requiring a local HTTP server to test at all, which is real added friction
+for zero-server-needed static HTML files. Continuing to debug a
+third-party library's internals blind, for what was explicitly optional
+polish (see docs/ROADMAP.md Step 2 backlog note), wasn't worth it. This
+version has no such issues and was already confirmed working before the
+StPageFlip detour.
 
 Design choices worth understanding, not just the code:
 
-1. Standalone .html output, no server. Fastest possible loop for iterating
-   on visual design — generate, open in browser, tweak CSS, regenerate.
-   A server/frontend framework is Step 5+ territory (see docs/ROADMAP.md).
+1. Standalone .html output, no server, works directly via file://.
+   Fastest possible loop for iterating on visual design.
 
 2. Pagination unit = one concept per page, one diagram per page, title
-   page first. Simple and deterministic regardless of content length —
-   no fragile text-measurement/reflow logic needed to pack variable-length
-   content into fixed page heights. The trade-off: a genuinely huge
-   concept could overflow its page and need to scroll within that page.
-   Acceptable for now; revisit if it actually happens on real notes.
+   page first. Simple and deterministic regardless of content length.
 
-3. "Flipping" is CSS scroll-snap, not display:none page-swapping. All
-   pages stay in normal document flow; Prev/Next just smooth-scrolls to
-   the next page's position. This matters specifically because of
-   Mermaid: it measures the DOM element it's rendering into when the
-   page loads. A diagram sitting inside a display:none container would
-   get measured as zero-size and render broken. Scroll-snap never hides
-   anything, so every diagram is always a real, measurable element.
+3. "Flipping" is CSS scroll-snap (horizontal), not a JS library. All
+   pages stay in normal document flow; Prev/Next smooth-scrolls to the
+   next page's position. Nothing is ever hidden or cloned, which is
+   exactly the class of bug that sank the StPageFlip attempt.
 
-4. Two fonts, not one. "Kalam" (handwriting) for prose, a monospace
-   stack for code syntax — a single handwriting font for code is
-   genuinely hard to read regardless of how charming it looks.
+4. THE ACTUAL FIX for "pages are different sizes" (a real bug in an
+   earlier version of this same scroll-snap approach, before the
+   StPageFlip detour): `.sheet-inner` now uses a FIXED `height`, not
+   `max-height`. The earlier bug existed because height was purely
+   content-based (auto, up to a max) — a short concept produced a short
+   box, a long one produced a tall one. A fixed height forces every page
+   to the same size regardless of content; overflow is handled by
+   `overflow-y: auto` on that same fixed-height box, so long content
+   scrolls WITHIN its page rather than changing the page's size.
 
-5. Mermaid's built-in `look: "handDrawn"` config — a rough.js-based
-   sketchy rendering mode Mermaid ships since v10.5+, instead of us
+5. Two fonts, not one — "Kalam" (handwriting) for prose, a monospace
+   stack for code syntax. A single handwriting font for code is
+   charming for five seconds and hard to read after.
+
+6. Mermaid's built-in `look: "handDrawn"` config — a rough.js-based
+   sketchy rendering mode Mermaid ships since v10.5+, instead of
    hand-rolling wobble/sketch effects ourselves.
 
-6. Everything injected into the HTML is html.escape()'d first, INCLUDING
-   mermaid diagram source. Gemini sometimes emits literal "<br/>" inside
-   diagram node labels for multi-line text. Unescaped, the browser's HTML
-   parser would convert that into a real <br> element before Mermaid ever
-   sees it, stripping the text Mermaid's own parser needs. Escaped to
-   "&lt;br/&gt;", the browser treats it as plain text, which decodes back
-   to the literal characters "<br/>" in the DOM's text content — exactly
-   what Mermaid expects to parse itself.
+7. Everything injected is html.escape()'d, INCLUDING mermaid diagram
+   source — Gemini sometimes emits literal "<br/>" inside diagram node
+   labels for multi-line text. Unescaped, the browser's HTML parser would
+   convert that into a real <br> element before Mermaid ever sees it,
+   stripping text Mermaid's own parser needs. Escaped to "&lt;br/&gt;",
+   it decodes back to the literal characters in the DOM's text content —
+   exactly what Mermaid expects to parse itself.
 """
 
 import html
@@ -80,9 +95,6 @@ html, body {
   color: var(--ink);
 }
 
-/* Scroll-snap container — this IS the "book". Each .sheet inside it is
-   one page; navigating snaps to whichever sheet is next, left-to-right,
-   like actually turning pages rather than scrolling down a list. */
 .book {
   height: 100vh;
   width: 100vw;
@@ -103,10 +115,13 @@ html, body {
   padding: 30px 20px;
 }
 
+/* FIXED height, not max-height — this is what makes every page the
+   same size regardless of content length. Overflow scrolls WITHIN
+   the page instead of the page itself resizing. */
 .sheet-inner {
   max-width: 780px;
   width: 100%;
-  max-height: calc(100vh - 100px);
+  height: 720px;
   overflow-y: auto;
   background:
     repeating-linear-gradient(
@@ -205,7 +220,6 @@ pre.mermaid {
   overflow-x: auto;
 }
 
-/* Nav bar — fixed, sits above the book */
 .nav {
   position: fixed;
   bottom: 18px;
@@ -275,8 +289,6 @@ _NAV_SCRIPT = """
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
   });
 
-  // Keep the counter/buttons in sync if the user scrolls manually
-  // instead of clicking Prev/Next.
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
@@ -324,18 +336,13 @@ def _concept_page(concept: dict) -> str:
     <section class="sheet">
       <div class="sheet-inner concept">
         <h2>{_esc(concept['name'])}</h2>
-
         <div class="field-label">What it is</div>
         <div class="field-body">{_esc(concept['what_it_is'])}</div>
-
         <div class="field-label">How it works</div>
         <div class="field-body">{_esc(concept['how_it_works'])}</div>
-
         {syntax_html}
-
         <div class="field-label">Key points</div>
         <ul class="key-points">{key_points_html}</ul>
-
         <div class="field-label">When to use</div>
         <div class="field-body">{_esc(concept['when_to_use'])}</div>
       </div>
@@ -344,7 +351,6 @@ def _concept_page(concept: dict) -> str:
 
 
 def _diagram_page(diagram: dict, index: int) -> str:
-    # Mermaid source escaped too — see module docstring point 6 for why.
     mermaid_src = _esc(diagram["mermaid"])
     return f"""
     <section class="sheet">
@@ -359,9 +365,7 @@ def _diagram_page(diagram: dict, index: int) -> str:
 def render_notes_html(data: dict) -> str:
     pages = [_title_page(data)]
     pages += [_concept_page(c) for c in data["concepts"]]
-    pages += [
-        _diagram_page(d, i) for i, d in enumerate(data["diagrams"], 1)
-    ]
+    pages += [_diagram_page(d, i) for i, d in enumerate(data["diagrams"], 1)]
     pages_html = "".join(pages)
 
     return f"""<!DOCTYPE html>
@@ -407,7 +411,8 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_out)
 
-    print(f"Rendered -> {output_path} ({len(data['concepts']) + len(data['diagrams']) + 1} pages)")
+    total_pages = len(data['concepts']) + len(data['diagrams']) + 1
+    print(f"Rendered -> {output_path} ({total_pages} pages)")
 
 
 if __name__ == "__main__":

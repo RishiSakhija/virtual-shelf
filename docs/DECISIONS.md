@@ -64,3 +64,37 @@ FREE_TIER_LIMITS.md — several models referenced in docs from earlier in
 2026 are already gone). Swapping `gemini-2.5-flash` → whatever replaces it
 should be a one-line config edit, not a code change + redeploy.
 **Cost:** one more file to keep in sync; trivial.
+
+## 8. Notes schema: concept cards, not freeform markdown (prompt_version 2)
+**Why:** freeform `notes_markdown` had no hard constraint against
+intro/outro filler, restated points, or inconsistent structure across
+videos — telling the model "don't add unnecessary stuff" in prose is a
+soft constraint that drifts over many runs. Restructuring the schema to
+fixed per-concept cards (`what_it_is`, `how_it_works`, `syntax`,
+`key_points`, `when_to_use`) makes the shape a hard constraint instead —
+there's no field for filler to go into. Also sets up Step 2 well: a
+concept-card shape maps naturally to distinct rendered note cards later;
+one markdown blob doesn't.
+**Cost:** breaking schema change — bumped `prompt_version` to 2 (old
+cached entries under version 1 are now dead weight; safe to delete).
+Also means `syntax` may legitimately be an empty string for non-code
+concepts — anything consuming this data must handle that, not assume
+syntax is always present.
+
+## 9. Reverted StPageFlip (real page-curl) back to CSS scroll-snap
+**Why:** StPageFlip produced a genuine curl animation and fixed page-size
+uniformity, but introduced a persistent content-bleeding bug between the
+cover page and adjacent content — survived three rounds of config changes
+(showCover, usePortrait toggling, width constraints) and was confirmed
+NOT a file:// origin issue (identical bug over a real localhost server).
+It also required running a local HTTP server just to test, real added
+friction for what should be a zero-dependency static HTML file. Continuing
+to debug a third-party library's internals blind, for something explicitly
+logged as optional polish (see ROADMAP.md Step 2 backlog note from
+earlier), wasn't worth the time. Reverted to the horizontal scroll-snap
+version, which had no such issues.
+**Cost:** no curl/bend animation — pages slide rather than physically
+turn. The "different page sizes" bug this scroll-snap version originally
+had is now properly fixed too, with a FIXED height (not max-height) on
+`.sheet-inner` — a fix fully within our own CSS, not dependent on a
+library we can't fully control.
