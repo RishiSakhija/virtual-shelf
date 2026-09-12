@@ -1,59 +1,65 @@
 """
 Step 2: render structured notes JSON into a standalone handwritten-style
-HTML file — paginated with horizontal scroll-snap, Prev/Next + arrow-key
-navigation.
-
-Reverted [this session] from a StPageFlip-based real page-curl version.
-Worth recording honestly why: StPageFlip produced a genuine curl
-animation and did fix page-size uniformity, but introduced a persistent
-bug where content from one page bled into another with wrong styling —
-survived three rounds of config changes and confirmed NOT caused by
-file:// origin restrictions (same bug over a real localhost server). Kept
-requiring a local HTTP server to test at all, which is real added friction
-for zero-server-needed static HTML files. Continuing to debug a
-third-party library's internals blind, for what was explicitly optional
-polish (see docs/ROADMAP.md Step 2 backlog note), wasn't worth it. This
-version has no such issues and was already confirmed working before the
-StPageFlip detour.
+HTML file with REAL text-flow pagination — content continues onto the
+next A4-sized page automatically when it doesn't fit, like an actual
+document, rather than one fixed box per concept with an internal
+scrollbar.
 
 Design choices worth understanding, not just the code:
 
-1. Standalone .html output, no server, works directly via file://.
-   Fastest possible loop for iterating on visual design.
+1. CSS multi-column layout (`columns`), not a JS pagination library. This
+   is the key architectural choice here: the browser's own layout engine
+   flows continuous HTML content across fixed-width "columns" (our
+   A4-sized pages), automatically breaking content that doesn't fit onto
+   the next one. No cloning, no DOM manipulation, no third-party library
+   internals to debug — this is exactly the kind of native browser
+   capability worth using instead of reaching for a library (see
+   docs/DECISIONS.md #9 for why a JS pagination library was reverted
+   after real, unresolved bugs).
 
-2. Pagination unit = one concept per page, one diagram per page, title
-   page first. Simple and deterministic regardless of content length.
+2. Real trade-off, stated honestly: each "page" can no longer be its own
+   independently-styled raised card (drop shadow, rounded corners) —
+   CSS columns share ONE continuous background across the whole flow.
+   The ruled-paper look and red margin line are recreated as repeating
+   background patterns (period = one page width) so they land correctly
+   on every page anyway; a `column-rule` (a built-in CSS feature for
+   exactly this) draws a subtle divider between pages instead.
 
-3. "Flipping" is CSS scroll-snap (horizontal), not a JS library. All
-   pages stay in normal document flow; Prev/Next smooth-scrolls to the
-   next page's position. Nothing is ever hidden or cloned, which is
-   exactly the class of bug that sank the StPageFlip attempt.
+3. `break-inside: avoid` on each concept/diagram block — a hint to the
+   browser to keep a whole concept together on one page where possible.
+   It's a hint, not a hard rule: a concept genuinely longer than one full
+   page will still split, which is correct, expected behavior for real
+   flowing pagination (this is precisely the behavior that was asked
+   for — continuation onto the next page — not a bug).
 
-4. THE ACTUAL FIX for "pages are different sizes" (a real bug in an
-   earlier version of this same scroll-snap approach, before the
-   StPageFlip detour): `.sheet-inner` now uses a FIXED `height`, not
-   `max-height`. The earlier bug existed because height was purely
-   content-based (auto, up to a max) — a short concept produced a short
-   box, a long one produced a tall one. A fixed height forces every page
-   to the same size regardless of content; overflow is handled by
-   `overflow-y: auto` on that same fixed-height box, so long content
-   scrolls WITHIN its page rather than changing the page's size.
+4. `break-after: column` on the title block specifically, so the title
+   page still reads as its own first page rather than sharing space with
+   the first concept — a deliberate exception to "let everything flow
+   freely," since a title immediately followed by unrelated concept text
+   on the same page would look wrong.
 
-5. Two fonts, not one — "Kalam" (handwriting) for prose, a monospace
-   stack for code syntax. A single handwriting font for code is
-   charming for five seconds and hard to read after.
+5. A4 page dimensions in CSS pixels at 72dpi (595 x 842) — the standard
+   convention most PDF/print tooling uses for "A4," recognizable and
+   consistent.
 
-6. Mermaid's built-in `look: "handDrawn"` config — a rough.js-based
-   sketchy rendering mode Mermaid ships since v10.5+, instead of
-   hand-rolling wobble/sketch effects ourselves.
+6. Page-turn motion is explicitly NOT part of this version — deferred
+   per docs/ROADMAP.md's Step 2 backlog note and docs/DECISIONS.md #9.
+   Navigation here is simple: Prev/Next scrolls exactly one page-width,
+   arrow keys do the same. Real curl/flip animation remains a separate,
+   later task once this flowing-pagination base is confirmed solid.
 
-7. Everything injected is html.escape()'d, INCLUDING mermaid diagram
+7. Mermaid renders via `startOnLoad: true` with no special ordering
+   concerns this time — unlike the StPageFlip version, nothing here
+   clones or hides DOM elements, so there's no race condition to guard
+   against.
+
+8. Everything injected is html.escape()'d, INCLUDING mermaid diagram
    source — Gemini sometimes emits literal "<br/>" inside diagram node
-   labels for multi-line text. Unescaped, the browser's HTML parser would
-   convert that into a real <br> element before Mermaid ever sees it,
-   stripping text Mermaid's own parser needs. Escaped to "&lt;br/&gt;",
-   it decodes back to the literal characters in the DOM's text content —
-   exactly what Mermaid expects to parse itself.
+   labels for multi-line text. Unescaped, the browser's HTML parser
+   would convert that into a real <br> element before Mermaid ever sees
+   it, stripping text Mermaid's own parser needs. Escaped to
+   "&lt;br/&gt;", it decodes back to the literal characters in the DOM's
+   text content — exactly what Mermaid expects to parse itself.
 """
 
 import html
@@ -82,6 +88,8 @@ _CSS = """
   --line: #b9d4e8;
   --margin-line: #e2a3a3;
   --accent: #2c5f7c;
+  --page-w: 595px;
+  --page-h: 842px;
 }
 
 * { box-sizing: border-box; }
@@ -95,129 +103,137 @@ html, body {
   color: var(--ink);
 }
 
-.book {
+.book-wrap {
   height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: row;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-}
-
-.sheet {
-  flex: 0 0 100vw;
-  height: 100vh;
-  scroll-snap-align: start;
-  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px;
 }
 
-/* FIXED height, not max-height — this is what makes every page the
-   same size regardless of content length. Overflow scrolls WITHIN
-   the page instead of the page itself resizing. */
-.sheet-inner {
-  max-width: 780px;
-  width: 100%;
-  height: 720px;
-  overflow-y: auto;
-  background:
+.book {
+  width: var(--page-w);
+  height: var(--page-h);
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+
+/* The actual pagination mechanism: content flows continuously and the
+   browser breaks it into page-width columns automatically. Two layered
+   backgrounds recreate the per-page paper look despite columns sharing
+   one continuous background: horizontal ruled lines (repeats vertically,
+   looks correct at any page since it only depends on Y position) and a
+   red margin line (repeats horizontally with period = one page width,
+   so it lands at the same offset on every page). */
+.flow {
+  columns: 1;
+  column-width: var(--page-w);
+  column-gap: 0;
+  column-rule: 1px dashed rgba(0,0,0,0.15);
+  column-fill: auto;
+  height: var(--page-h);
+  background-color: var(--paper);
+  background-image:
     repeating-linear-gradient(
       var(--paper),
       var(--paper) 34px,
       var(--line) 35px
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 40px,
+      var(--margin-line) 40px,
+      var(--margin-line) 42px,
+      transparent 42px,
+      transparent var(--page-w)
     );
-  background-attachment: local;
-  border-radius: 4px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-  padding: 44px 36px 44px 66px;
-  position: relative;
+  padding: 30px 0;
 }
 
-.sheet-inner::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 42px;
-  width: 2px;
-  background: var(--margin-line);
-  opacity: 0.6;
+.title-block {
+  break-after: column;
+  padding: 0 30px 0 60px;
 }
 
 h1.title {
-  font-size: 2.1em;
-  margin: 0 0 4px 0;
+  font-size: 2em;
+  margin: 0 0 8px 0;
   color: var(--accent);
   transform: rotate(-0.4deg);
 }
 
 p.overview {
-  font-size: 1.15em;
+  font-size: 1.05em;
   color: var(--ink-soft);
-  margin-top: 20px;
+}
+
+.concept, .diagram-block {
+  break-inside: avoid;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 30px 0 60px;
+  margin-bottom: 30px;
 }
 
 .concept h2 {
-  font-size: 1.6em;
-  margin: 0 0 14px 0;
+  font-size: 1.4em;
+  margin: 0 0 10px 0;
   color: var(--accent);
-  display: inline-block;
   transform: rotate(-0.3deg);
 }
 
 .field-label {
   font-weight: 700;
   color: var(--accent);
-  font-size: 1.05em;
-  margin-top: 14px;
+  font-size: 1em;
+  margin-top: 10px;
 }
 
 .field-body {
   margin: 2px 0 0 4px;
-  font-size: 1.08em;
-  line-height: 1.55;
+  font-size: 1em;
+  line-height: 1.5;
 }
 
 .syntax-box {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.9em;
+  font-size: 0.82em;
   background: #f4f1e6;
   border: 1px solid #d8d2bd;
   border-left: 4px solid var(--accent);
   border-radius: 3px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   margin-top: 6px;
   white-space: pre-wrap;
   color: #333;
 }
 
 .key-points {
-  margin: 4px 0 0 20px;
+  margin: 4px 0 0 18px;
   padding: 0;
 }
 
 .key-points li {
   margin-bottom: 4px;
-  font-size: 1.08em;
+  font-size: 1em;
 }
 
 .diagram-title {
   font-weight: 700;
-  font-size: 1.4em;
-  margin-bottom: 14px;
+  font-size: 1.2em;
+  margin-bottom: 10px;
   color: var(--accent);
-  transform: rotate(-0.3deg);
 }
 
 pre.mermaid {
   background: #fbfaf3;
   border: 1px solid #d8d2bd;
   border-radius: 6px;
-  padding: 12px;
+  padding: 10px;
   overflow-x: auto;
+  font-size: 0.78em;
 }
 
 .nav {
@@ -235,7 +251,6 @@ pre.mermaid {
   font-family: 'Kalam', cursive;
   font-size: 1em;
   z-index: 10;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 
 .nav button {
@@ -248,57 +263,51 @@ pre.mermaid {
   padding: 2px 8px;
 }
 
-.nav button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.nav .counter {
-  min-width: 70px;
-  text-align: center;
-}
+.nav button:disabled { opacity: 0.35; cursor: default; }
+.nav .counter { min-width: 70px; text-align: center; }
 """
 
 _NAV_SCRIPT = """
 <script>
   const book = document.querySelector('.book');
-  const sheets = Array.from(document.querySelectorAll('.sheet'));
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const counter = document.getElementById('pageCounter');
-  let current = 0;
+  const pageStep = book.clientWidth;
+
+  function totalPages() {
+    return Math.max(1, Math.round(book.scrollWidth / pageStep));
+  }
+
+  function currentPage() {
+    return Math.round(book.scrollLeft / pageStep);
+  }
 
   function updateUI() {
-    counter.textContent = `Page ${current + 1} / ${sheets.length}`;
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === sheets.length - 1;
+    const cur = currentPage();
+    const total = totalPages();
+    counter.textContent = `Page ${cur + 1} / ${total}`;
+    prevBtn.disabled = cur <= 0;
+    nextBtn.disabled = cur >= total - 1;
   }
 
   function goTo(index) {
-    if (index < 0 || index >= sheets.length) return;
-    current = index;
-    sheets[current].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-    updateUI();
+    book.scrollTo({ left: index * pageStep, behavior: 'smooth' });
   }
 
-  prevBtn.addEventListener('click', () => goTo(current - 1));
-  nextBtn.addEventListener('click', () => goTo(current + 1));
+  prevBtn.addEventListener('click', () => goTo(currentPage() - 1));
+  nextBtn.addEventListener('click', () => goTo(currentPage() + 1));
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(currentPage() + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(currentPage() - 1);
   });
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        current = sheets.indexOf(entry.target);
-        updateUI();
-      }
-    });
-  }, { root: book, threshold: 0.6 });
-
-  sheets.forEach((s) => observer.observe(s));
+  let scrollTimeout;
+  book.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateUI, 80);
+  });
 
   updateUI();
 </script>
@@ -309,18 +318,16 @@ def _esc(text: str) -> str:
     return html.escape(text or "")
 
 
-def _title_page(data: dict) -> str:
+def _title_block(data: dict) -> str:
     return f"""
-    <section class="sheet">
-      <div class="sheet-inner">
-        <h1 class="title">{_esc(data['title'])}</h1>
-        <p class="overview">{_esc(data['overview'])}</p>
-      </div>
-    </section>
+    <div class="title-block">
+      <h1 class="title">{_esc(data['title'])}</h1>
+      <p class="overview">{_esc(data['overview'])}</p>
+    </div>
     """
 
 
-def _concept_page(concept: dict) -> str:
+def _concept_block(concept: dict) -> str:
     syntax = concept.get("syntax", "")
     syntax_html = (
         f'<div class="field-label">Syntax / usage</div>'
@@ -333,40 +340,36 @@ def _concept_page(concept: dict) -> str:
     )
 
     return f"""
-    <section class="sheet">
-      <div class="sheet-inner concept">
-        <h2>{_esc(concept['name'])}</h2>
-        <div class="field-label">What it is</div>
-        <div class="field-body">{_esc(concept['what_it_is'])}</div>
-        <div class="field-label">How it works</div>
-        <div class="field-body">{_esc(concept['how_it_works'])}</div>
-        {syntax_html}
-        <div class="field-label">Key points</div>
-        <ul class="key-points">{key_points_html}</ul>
-        <div class="field-label">When to use</div>
-        <div class="field-body">{_esc(concept['when_to_use'])}</div>
-      </div>
-    </section>
+    <div class="concept">
+      <h2>{_esc(concept['name'])}</h2>
+      <div class="field-label">What it is</div>
+      <div class="field-body">{_esc(concept['what_it_is'])}</div>
+      <div class="field-label">How it works</div>
+      <div class="field-body">{_esc(concept['how_it_works'])}</div>
+      {syntax_html}
+      <div class="field-label">Key points</div>
+      <ul class="key-points">{key_points_html}</ul>
+      <div class="field-label">When to use</div>
+      <div class="field-body">{_esc(concept['when_to_use'])}</div>
+    </div>
     """
 
 
-def _diagram_page(diagram: dict, index: int) -> str:
+def _diagram_block(diagram: dict, index: int) -> str:
     mermaid_src = _esc(diagram["mermaid"])
     return f"""
-    <section class="sheet">
-      <div class="sheet-inner">
-        <div class="diagram-title">[{index}] {_esc(diagram['title'])}</div>
-        <pre class="mermaid">{mermaid_src}</pre>
-      </div>
-    </section>
+    <div class="diagram-block">
+      <div class="diagram-title">[{index}] {_esc(diagram['title'])}</div>
+      <pre class="mermaid">{mermaid_src}</pre>
+    </div>
     """
 
 
 def render_notes_html(data: dict) -> str:
-    pages = [_title_page(data)]
-    pages += [_concept_page(c) for c in data["concepts"]]
-    pages += [_diagram_page(d, i) for i, d in enumerate(data["diagrams"], 1)]
-    pages_html = "".join(pages)
+    blocks = [_title_block(data)]
+    blocks += [_concept_block(c) for c in data["concepts"]]
+    blocks += [_diagram_block(d, i) for i, d in enumerate(data["diagrams"], 1)]
+    blocks_html = "".join(blocks)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -377,8 +380,12 @@ def render_notes_html(data: dict) -> str:
 <style>{_CSS}</style>
 </head>
 <body>
-  <div class="book">
-    {pages_html}
+  <div class="book-wrap">
+    <div class="book">
+      <div class="flow">
+        {blocks_html}
+      </div>
+    </div>
   </div>
 
   <div class="nav">
@@ -411,8 +418,7 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_out)
 
-    total_pages = len(data['concepts']) + len(data['diagrams']) + 1
-    print(f"Rendered -> {output_path} ({total_pages} pages)")
+    print(f"Rendered -> {output_path} (flowing pagination, page count determined by content)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scikit-Learn Pipelines: End-to-End Machine Learning Workflows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fdfcf3;
+  --ink: #2b2b2b;
+  --ink-soft: #45494a;
+  --line: #b9d4e8;
+  --margin-line: #e2a3a3;
+  --accent: #2c5f7c;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #e7e2d6;
+  font-family: 'Kalam', cursive;
+  color: var(--ink);
+}
+
+.book {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+}
+
+.sheet {
+  flex: 0 0 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+/* FIXED height, not max-height — this is what makes every page the
+   same size regardless of content length. Overflow scrolls WITHIN
+   the page instead of the page itself resizing. */
+.sheet-inner {
+  max-width: 780px;
+  width: 100%;
+  height: 720px;
+  overflow-y: auto;
+  background:
+    repeating-linear-gradient(
+      var(--paper),
+      var(--paper) 34px,
+      var(--line) 35px
+    );
+  background-attachment: local;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  padding: 44px 36px 44px 66px;
+  position: relative;
+}
+
+.sheet-inner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 42px;
+  width: 2px;
+  background: var(--margin-line);
+  opacity: 0.6;
+}
+
+h1.title {
+  font-size: 2.1em;
+  margin: 0 0 4px 0;
+  color: var(--accent);
+  transform: rotate(-0.4deg);
+}
+
+p.overview {
+  font-size: 1.15em;
+  color: var(--ink-soft);
+  margin-top: 20px;
+}
+
+.concept h2 {
+  font-size: 1.6em;
+  margin: 0 0 14px 0;
+  color: var(--accent);
+  display: inline-block;
+  transform: rotate(-0.3deg);
+}
+
+.field-label {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1.05em;
+  margin-top: 14px;
+}
+
+.field-body {
+  margin: 2px 0 0 4px;
+  font-size: 1.08em;
+  line-height: 1.55;
+}
+
+.syntax-box {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  background: #f4f1e6;
+  border: 1px solid #d8d2bd;
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  padding: 10px 14px;
+  margin-top: 6px;
+  white-space: pre-wrap;
+  color: #333;
+}
+
+.key-points {
+  margin: 4px 0 0 20px;
+  padding: 0;
+}
+
+.key-points li {
+  margin-bottom: 4px;
+  font-size: 1.08em;
+}
+
+.diagram-title {
+  font-weight: 700;
+  font-size: 1.4em;
+  margin-bottom: 14px;
+  color: var(--accent);
+  transform: rotate(-0.3deg);
+}
+
+pre.mermaid {
+  background: #fbfaf3;
+  border: 1px solid #d8d2bd;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.nav {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(43, 43, 43, 0.85);
+  color: #fdfcf3;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  z-index: 10;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.nav button {
+  background: none;
+  border: none;
+  color: #fdfcf3;
+  font-family: 'Kalam', cursive;
+  font-size: 1.1em;
+  cursor: pointer;
+  padding: 2px 8px;
+}
+
+.nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav .counter {
+  min-width: 70px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+  <div class="book">
+    
+    <section class="sheet">
+      <div class="sheet-inner">
+        <h1 class="title">Scikit-Learn Pipelines: End-to-End Machine Learning Workflows</h1>
+        <p class="overview">This lecture explains the purpose, architecture, and practical implementation of Scikit-Learn Pipelines. It demonstrates the differences between building ML workflows manually versus using pipelines for automated preprocessing, model training, hyperparameter tuning, and production deployment.</p>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Scikit-Learn Pipeline</h2>
+        <div class="field-label">What it is</div>
+        <div class="field-body">A utility class in Scikit-Learn that sequentially chains together multiple data transformation steps and a final estimator into a single composite object.</div>
+        <div class="field-label">How it works</div>
+        <div class="field-body">When `fit` is called, the pipeline executes `fit_transform` (or `transform`) sequentially across all intermediate transformer steps, passing the output of each step as the input to the next step, before finally fitting the estimator. During `predict`, incoming data automatically passes through all intermediate `transform` steps before generating predictions.</div>
+        <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.pipeline import Pipeline
+
+pipe = Pipeline([
+    (&#x27;imputer&#x27;, trf1),
+    (&#x27;encoder&#x27;, trf2),
+    (&#x27;scaler&#x27;, trf3),
+    (&#x27;model&#x27;, clf)
+])
+
+pipe.fit(X_train, y_train)
+pipe.predict(X_test)</div>
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Encapsulates all preprocessing and modeling logic into a single exportable artifact (`pickle`), preventing code duplication between training and production.</li><li>Guarantees that identical transformations applied during training are applied seamlessly to raw inference data without manual reconstruction.</li><li>If no estimator is included at the end, the pipeline functions as a multi-stage transformer using `fit_transform`.</li></ul>
+        <div class="field-label">When to use</div>
+        <div class="field-body">Whenever building reproducible ML workflows requiring multiple sequential data transformations (imputation, encoding, scaling, feature selection) prior to model training or production deployment.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>make_pipeline Convenience Function</h2>
+        <div class="field-label">What it is</div>
+        <div class="field-body">A shorthand factory function in Scikit-Learn that constructs a `Pipeline` without requiring explicit string names for each step.</div>
+        <div class="field-label">How it works</div>
+        <div class="field-body">It accepts transformer and estimator instances as positional arguments and automatically generates step names based on the lowercase class names of each object (e.g., `simpleimputer`, `columntransformer-1`).</div>
+        <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.pipeline import make_pipeline
+
+pipe = make_pipeline(trf1, trf2, trf3, clf)
+pipe.fit(X_train, y_train)</div>
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Reduces boilerplate syntax compared to the standard `Pipeline` constructor.</li><li>Auto-generated step names can make debugging or specifying hyperparameter grids in `GridSearchCV` less explicit than custom-named steps.</li></ul>
+        <div class="field-label">When to use</div>
+        <div class="field-body">When quickly assembling straightforward pipelines where explicit custom step names are not necessary.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Index-Based Column Selection in Chained ColumnTransformers</h2>
+        <div class="field-label">What it is</div>
+        <div class="field-body">A technique of referencing DataFrame/array columns by integer indices rather than string column names inside `ColumnTransformer` steps within a pipeline.</div>
+        <div class="field-label">How it works</div>
+        <div class="field-body">Because intermediate Scikit-Learn transformers output NumPy arrays that lack pandas column names, downstream `ColumnTransformer` steps cannot access columns by name. Passing integer column indices or slices (e.g., `[2]`, `[1, 6]`, `slice(0, 10)`) allows transformers to correctly locate target features across intermediate array outputs.</div>
+        <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+
+trf1 = ColumnTransformer([
+    (&#x27;impute_age&#x27;, SimpleImputer(), [2]),
+    (&#x27;impute_embarked&#x27;, SimpleImputer(strategy=&#x27;most_frequent&#x27;), [6])
+], remainder=&#x27;passthrough&#x27;)</div>
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>String column names fail in subsequent steps because previous transformers convert pandas DataFrames into NumPy arrays.</li><li>Requires tracking the expansion and contraction of column indices when operations like One-Hot Encoding add new feature columns.</li><li>Setting `remainder=&#x27;passthrough&#x27;` is essential to keep untouched columns moving forward through the pipeline.</li></ul>
+        <div class="field-label">When to use</div>
+        <div class="field-body">When chaining multiple `ColumnTransformer` instances sequentially inside a Scikit-Learn pipeline.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Pipeline Inspection and HTML Diagram Visualization</h2>
+        <div class="field-label">What it is</div>
+        <div class="field-body">Features in Scikit-Learn for inspecting internal step parameters and rendering visual interactive diagrams of pipeline architectures.</div>
+        <div class="field-label">How it works</div>
+        <div class="field-body">`set_config(display=&#x27;diagram&#x27;)` enables visual block-diagram rendering of pipeline graphs in Jupyter notebook outputs. The `named_steps` dictionary attribute allows direct programmatic access to individual fitted transformer objects and their learned attributes (e.g., mean imputation values, learned encodings).</div>
+        <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn import set_config
+set_config(display=&#x27;diagram&#x27;)
+
+# Inspect fitted step parameters
+mean_age = pipe.named_steps[&#x27;trf1&#x27;].transformers_[0][1].statistics_
+print(pipe.named_steps[&#x27;trf5&#x27;].classes_)</div>
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>`pipe.named_steps` exposes each pipeline stage as a key-value dictionary for debugging.</li><li>Interactive diagrams allow users to click into nested components to verify transformer configurations and estimators.</li><li>Facilitates auditing learned statistics (like imputer means or scaler min/max values) without disassembling the pipeline.</li></ul>
+        <div class="field-label">When to use</div>
+        <div class="field-body">During model development, debugging, and verification to inspect intermediate transformation parameters and validate pipeline topologies.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner concept">
+        <h2>Cross-Validation and GridSearch with Pipelines</h2>
+        <div class="field-label">What it is</div>
+        <div class="field-body">Evaluating and tuning pipeline hyperparameters using `cross_val_score` and `GridSearchCV` while eliminating data leakage.</div>
+        <div class="field-label">How it works</div>
+        <div class="field-body">`cross_val_score` fits the entire preprocessing pipeline on each training fold independently before evaluating on validation folds. `GridSearchCV` tunes parameters across any step in the pipeline using a double-underscore naming convention (`&lt;step_name&gt;__&lt;parameter_name&gt;`).</div>
+        <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.model_selection import cross_val_score, GridSearchCV
+
+# Cross-validation
+scores = cross_val_score(pipe, X_train, y_train, cv=5, scoring=&#x27;accuracy&#x27;)
+
+# Hyperparameter tuning
+param_grid = {&#x27;trf5__max_depth&#x27;: [1, 2, 3, 4, 5, None]}
+grid = GridSearchCV(pipe, param_grid, cv=5, scoring=&#x27;accuracy&#x27;)
+grid.fit(X_train, y_train)</div>
+        <div class="field-label">Key points</div>
+        <ul class="key-points"><li>Prevents data leakage by ensuring preprocessing statistics (imputation means, scaling limits) are computed strictly on training folds.</li><li>Parameters belonging to specific pipeline steps are addressed in the grid via `&lt;step_name&gt;__&lt;param_name&gt;`.</li><li>Enables simultaneous optimization of preprocessing parameters and model hyperparameters in a single search.</li></ul>
+        <div class="field-label">When to use</div>
+        <div class="field-body">When tuning model and preprocessing hyperparameters simultaneously or validating model performance across cross-validation folds.</div>
+      </div>
+    </section>
+    
+    <section class="sheet">
+      <div class="sheet-inner">
+        <div class="diagram-title">[1] Data Flow in Scikit-Learn Pipeline vs. Manual Preprocessing</div>
+        <pre class="mermaid">flowchart TD
+    subgraph PipelineFlow [Scikit-Learn Pipeline Data Flow]
+        RawInput[Raw Data Input] --&gt; TRF1[Step 1: Imputation ColumnTransformer
+Age -&gt; Mean, Embarked -&gt; Mode]
+        TRF1 --&gt;|NumPy Array| TRF2[Step 2: One-Hot Encoding
+Sex &amp; Embarked]
+        TRF2 --&gt;|NumPy Array| TRF3[Step 3: Min-Max Scaling
+Columns 0 to 10]
+        TRF3 --&gt;|NumPy Array| TRF4[Step 4: Feature Selection
+SelectKBest k=8]
+        TRF4 --&gt;|Selected Features| TRF5[Step 5: Decision Tree Classifier]
+        TRF5 --&gt; Output[Prediction: Survived / Not Survived]
+    end
+
+    subgraph DeploymentBenefit [Production Deployment]
+        PickledPipe[pipe.pkl: Single Artifact] --&gt;|pipe.predict raw_input| Output
+    end</pre>
+      </div>
+    </section>
+    
+  </div>
+
+  <div class="nav">
+    <button id="prevBtn">&larr; Prev</button>
+    <span class="counter" id="pageCounter"></span>
+    <button id="nextBtn">Next &rarr;</button>
+  </div>
+
+<script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, look: 'handDrawn', theme: 'neutral' });</script>
+
+<script>
+  const book = document.querySelector('.book');
+  const sheets = Array.from(document.querySelectorAll('.sheet'));
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const counter = document.getElementById('pageCounter');
+  let current = 0;
+
+  function updateUI() {
+    counter.textContent = `Page ${current + 1} / ${sheets.length}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === sheets.length - 1;
+  }
+
+  function goTo(index) {
+    if (index < 0 || index >= sheets.length) return;
+    current = index;
+    sheets[current].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    updateUI();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        current = sheets.indexOf(entry.target);
+        updateUI();
+      }
+    });
+  }, { root: book, threshold: 0.6 });
+
+  sheets.forEach((s) => observer.observe(s));
+
+  updateUI();
+</script>
+
+</body>
+</html>
