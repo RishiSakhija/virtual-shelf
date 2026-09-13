@@ -18,6 +18,16 @@
 
 * { box-sizing: border-box; }
 
+/* Defensive: guarantees no single long word/URL/identifier can ever
+   push content past a page's width, regardless of what Gemini generates.
+   Without this, the specific width-clipping bug we just fixed could
+   resurface for a totally different reason (unbreakable text) rather
+   than the column-width arithmetic mistake that caused it originally. */
+h1, h2, p, li, div {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 html, body {
   margin: 0;
   height: 100%;
@@ -33,6 +43,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 1800px;
 }
 
 .book {
@@ -41,6 +52,13 @@ html, body {
   overflow-x: auto;
   overflow-y: hidden;
   box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+  transform-style: preserve-3d;
+}
+
+.book.turning {
+  transform: rotateY(-10deg) scale(0.96);
+  box-shadow: 0 30px 50px rgba(0,0,0,0.45);
 }
 
 /* The actual pagination mechanism: content flows continuously and the
@@ -78,7 +96,23 @@ html, body {
 
 .title-block {
   break-after: column;
-  padding: 0 30px 0 60px;
+  padding: 40px 30px 0 60px;
+  /* Fills the exact visible page area (page height minus .flow's own
+     30px top+bottom padding) so the dark background covers the whole
+     page with no ruled-paper bleeding through below it. Safe to do this
+     time: break-after:column guarantees NOTHING else ever shares this
+     page, unlike the earlier StPageFlip attempt where a third-party
+     library's own hard-page/pairing logic was what caused content to
+     bleed between the cover and page 1 (see docs/DECISIONS.md #9) —
+     that failure mode doesn't exist here at all. */
+  height: calc(var(--page-h) - 60px);
+  background: linear-gradient(135deg, var(--accent), #1d4054);
+  color: #fdfcf3;
+}
+
+.title-block h1.title,
+.title-block p.overview {
+  color: #fdfcf3;
 }
 
 h1.title {
@@ -131,6 +165,7 @@ p.overview {
   padding: 8px 12px;
   margin-top: 6px;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   color: #333;
 }
 
@@ -399,8 +434,25 @@ pre.mermaid {
     nextBtn.disabled = cur >= total - 1;
   }
 
+  // Hand-rolled "page turn feel" — not true physical curl (see
+  // docs/DECISIONS.md for why a real page-flip library was reverted).
+  // The trick: tilt the whole book away in 3D (CSS `.turning` class),
+  // which visually obscures it briefly; WHILE hidden, instantly jump the
+  // actual scroll position (no native smooth-scroll fighting our timing);
+  // then remove the class, which transitions back to flat, "revealing"
+  // the new page. The 140ms delay is deliberately half of the CSS
+  // transition's 0.28s duration — long enough for the tilt to reach a
+  // visually obscuring angle before the jump happens underneath it.
   function goTo(index) {
-    book.scrollTo({ left: index * pageStep, behavior: 'smooth' });
+    const total = totalPages();
+    if (index < 0 || index >= total) return;
+
+    book.classList.add('turning');
+    setTimeout(() => {
+      book.scrollTo({ left: index * pageStep, behavior: 'auto' });
+      book.classList.remove('turning');
+      updateUI();
+    }, 140);
   }
 
   prevBtn.addEventListener('click', () => goTo(currentPage() - 1));
