@@ -224,6 +224,58 @@ pre.mermaid {
 
 .nav button:disabled { opacity: 0.35; cursor: default; }
 .nav .counter { min-width: 70px; text-align: center; }
+
+/* Editable-field affordance — a subtle dashed outline on hover so it's
+   discoverable that text can be clicked and edited, without visually
+   cluttering the page when the person isn't actively interacting. */
+[contenteditable="true"]:hover {
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+[contenteditable="true"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: rgba(44, 95, 124, 0.05);
+}
+
+.export-btn {
+  background: var(--accent);
+  color: #fdfcf3;
+  border: none;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* Print stylesheet — a DELIBERATELY different layout from the on-screen
+   horizontal-scroll book. Print/PDF export needs normal top-to-bottom
+   page flow with real page breaks, not a JS-driven horizontal-scrolling
+   container — browsers don't paginate horizontal overflow for print.
+   @page sets true A4 dimensions for the exported PDF itself. */
+@media print {
+  .nav, .export-btn { display: none; }
+  html, body { overflow: visible; height: auto; background: white; }
+  .book-wrap { height: auto; width: auto; display: block; perspective: none; }
+  .book { width: auto; height: auto; overflow: visible; box-shadow: none; transform: none !important; }
+  .flow {
+    columns: auto;
+    column-width: auto;
+    column-fill: auto;
+    height: auto;
+    column-rule: none;
+  }
+  .title-block { height: auto; break-after: page; }
+  .concept, .diagram-block { break-inside: avoid; }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
 </style>
 </head>
 <body>
@@ -232,60 +284,60 @@ pre.mermaid {
       <div class="flow">
         
     <div class="title-block">
-      <h1 class="title">Introduction to Model Context Protocol (MCP)</h1>
-      <p class="overview">An architectural breakdown of the Model Context Protocol (MCP), an open-source standard designed to connect AI agents to external data sources such as databases, APIs, and local code environments.</p>
+      <h1 class="title" contenteditable="true" data-field-id="title">Introduction to Model Context Protocol (MCP)</h1>
+      <p class="overview" contenteditable="true" data-field-id="overview">An architectural breakdown of the Model Context Protocol (MCP), an open-source standard designed to connect AI agents to external data sources such as databases, APIs, and local code environments.</p>
     </div>
     
     <div class="concept">
-      <h2>Model Context Protocol (MCP)</h2>
+      <h2 contenteditable="true" data-field-id="concept-0-name">Model Context Protocol (MCP)</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">An open-source communication standard and transport layer protocol that standardizes how AI applications and agents connect to external tools and data sources.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-what_it_is">An open-source communication standard and transport layer protocol that standardizes how AI applications and agents connect to external tools and data sources.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Acts as an intermediary transport layer between an MCP client application and one or more MCP servers, standardizing tool discovery, request execution, and response routing.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-how_it_works">Acts as an intermediary transport layer between an MCP client application and one or more MCP servers, standardizing tool discovery, request execution, and response routing.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Eliminates custom, ad-hoc integrations for every external database or API.</li><li>Separates client-side orchestration from tool execution logic.</li><li>Allows a single host or client to connect to multiple MCP servers simultaneously.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-0-kp-0">Eliminates custom, ad-hoc integrations for every external database or API.</li><li contenteditable="true" data-field-id="concept-0-kp-1">Separates client-side orchestration from tool execution logic.</li><li contenteditable="true" data-field-id="concept-0-kp-2">Allows a single host or client to connect to multiple MCP servers simultaneously.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When developing AI agents or LLM-powered applications that need reliable, standardized access to external systems like SQL/NoSQL databases, REST/GraphQL APIs, or local files.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-when_to_use">When developing AI agents or LLM-powered applications that need reliable, standardized access to external systems like SQL/NoSQL databases, REST/GraphQL APIs, or local files.</div>
     </div>
     
     <div class="concept">
-      <h2>MCP Host and Client</h2>
+      <h2 contenteditable="true" data-field-id="concept-1-name">MCP Host and Client</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The user-facing runtime application (the host) and its internal connection interface (the client) that manage agent interaction and coordinate with LLMs.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-what_it_is">The user-facing runtime application (the host) and its internal connection interface (the client) that manage agent interaction and coordinate with LLMs.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">The host (such as a chat application or IDE code assistant) contains one or more MCP clients. It discovers available tools from registered MCP servers, formats prompt context for the LLM, and dispatches tool execution requests.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-how_it_works">The host (such as a chat application or IDE code assistant) contains one or more MCP clients. It discovers available tools from registered MCP servers, formats prompt context for the LLM, and dispatches tool execution requests.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>A single MCP host can manage one or multiple MCP clients.</li><li>Common host implementations include chat interfaces, IDE extensions, and automated workflows.</li><li>The host mediates between the user, the LLM, and the downstream MCP servers.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-1-kp-0">A single MCP host can manage one or multiple MCP clients.</li><li contenteditable="true" data-field-id="concept-1-kp-1">Common host implementations include chat interfaces, IDE extensions, and automated workflows.</li><li contenteditable="true" data-field-id="concept-1-kp-2">The host mediates between the user, the LLM, and the downstream MCP servers.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When building or configuring the primary environment where user interactions occur and where agentic decisions are routed to LLMs.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-when_to_use">When building or configuring the primary environment where user interactions occur and where agentic decisions are routed to LLMs.</div>
     </div>
     
     <div class="concept">
-      <h2>MCP Server</h2>
+      <h2 contenteditable="true" data-field-id="concept-2-name">MCP Server</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">A lightweight service that exposes specific capabilities, data sources, or executable functions as standardized MCP tools.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-what_it_is">A lightweight service that exposes specific capabilities, data sources, or executable functions as standardized MCP tools.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Registers available tools with the MCP host on demand, listens for tool-use execution requests across the MCP protocol, interfaces directly with external resources (databases, APIs, or local code), and returns structured outputs.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-how_it_works">Registers available tools with the MCP host on demand, listens for tool-use execution requests across the MCP protocol, interfaces directly with external resources (databases, APIs, or local code), and returns structured outputs.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Agnostic to backend implementations (works with relational DBs, NoSQL, APIs, or file systems).</li><li>Hosts can connect to arbitrary numbers of independent MCP servers.</li><li>Encapsulates authentication, schema mapping, and query logic away from the LLM prompt.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-2-kp-0">Agnostic to backend implementations (works with relational DBs, NoSQL, APIs, or file systems).</li><li contenteditable="true" data-field-id="concept-2-kp-1">Hosts can connect to arbitrary numbers of independent MCP servers.</li><li contenteditable="true" data-field-id="concept-2-kp-2">Encapsulates authentication, schema mapping, and query logic away from the LLM prompt.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When wrapping an internal database, SaaS API, or local execution environment to expose its functionality safely to LLM agents.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-when_to_use">When wrapping an internal database, SaaS API, or local execution environment to expose its functionality safely to LLM agents.</div>
     </div>
     
     <div class="concept">
-      <h2>MCP Agent Execution Workflow</h2>
+      <h2 contenteditable="true" data-field-id="concept-3-name">MCP Agent Execution Workflow</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The multi-step interaction loop through which an MCP host discovers tools, consults an LLM, invokes tools via MCP servers, and generates a grounded response.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-what_it_is">The multi-step interaction loop through which an MCP host discovers tools, consults an LLM, invokes tools via MCP servers, and generates a grounded response.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">The host receives a user question, queries MCP servers for available tools, and forwards both the question and tool definitions to the LLM. When the LLM requests a tool call, the host routes it to the designated MCP server, executes against the data source, feeds the result back to the LLM, and receives the final answer.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-how_it_works">The host receives a user question, queries MCP servers for available tools, and forwards both the question and tool definitions to the LLM. When the LLM requests a tool call, the host routes it to the designated MCP server, executes against the data source, feeds the result back to the LLM, and receives the final answer.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Tool discovery happens dynamically prior to or during the prompt assembly.</li><li>Execution is iterative: tool results can prompt subsequent tool calls or final answer generation.</li><li>The LLM decides which tool to call, but the MCP server executes the operation and retrieves real data.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-3-kp-0">Tool discovery happens dynamically prior to or during the prompt assembly.</li><li contenteditable="true" data-field-id="concept-3-kp-1">Execution is iterative: tool results can prompt subsequent tool calls or final answer generation.</li><li contenteditable="true" data-field-id="concept-3-kp-2">The LLM decides which tool to call, but the MCP server executes the operation and retrieves real data.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When architecting agentic request-response lifecycles that require external data grounding and tool execution.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-when_to_use">When architecting agentic request-response lifecycles that require external data grounding and tool execution.</div>
     </div>
     
     <div class="diagram-block">
@@ -320,6 +372,7 @@ pre.mermaid {
     <button id="prevBtn">&larr; Prev</button>
     <span class="counter" id="pageCounter"></span>
     <button id="nextBtn">Next &rarr;</button>
+    <button id="exportBtn" class="export-btn">Export PDF</button>
   </div>
 
 <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, look: 'handDrawn', theme: 'neutral' });</script>
@@ -381,6 +434,42 @@ pre.mermaid {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(updateUI, 80);
   });
+
+  // --- Editable text persistence ---
+  // Storage is scoped by the file's own path (location.pathname), so
+  // each note's edits are independent without needing any ID passed in
+  // from Python — every note already has a unique file path. Only plain
+  // TEXT is saved per field (never diagram/mermaid content is touched),
+  // which sidesteps any risk of corrupting a rendered diagram's SVG.
+  const STORAGE_PREFIX = 'virtualshelf:' + window.location.pathname + ':';
+  const editableFields = document.querySelectorAll('[data-field-id]');
+
+  editableFields.forEach((el) => {
+    const key = STORAGE_PREFIX + el.dataset.fieldId;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      el.textContent = saved;
+    }
+
+    let saveTimeout;
+    el.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(key, el.textContent);
+      }, 400);
+    });
+  });
+
+  // --- PDF export ---
+  // Uses the browser's own native print-to-PDF (window.print(), then the
+  // person chooses "Save as PDF" in the print dialog) — no new library,
+  // no paid service, works entirely offline. The @media print stylesheet
+  // (see _CSS) reflows content into normal top-to-bottom pages just for
+  // this, independent of the on-screen horizontal-scroll book view.
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => window.print());
+  }
 
   updateUI();
 </script>

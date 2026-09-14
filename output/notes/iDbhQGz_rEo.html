@@ -224,6 +224,58 @@ pre.mermaid {
 
 .nav button:disabled { opacity: 0.35; cursor: default; }
 .nav .counter { min-width: 70px; text-align: center; }
+
+/* Editable-field affordance — a subtle dashed outline on hover so it's
+   discoverable that text can be clicked and edited, without visually
+   cluttering the page when the person isn't actively interacting. */
+[contenteditable="true"]:hover {
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+[contenteditable="true"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: rgba(44, 95, 124, 0.05);
+}
+
+.export-btn {
+  background: var(--accent);
+  color: #fdfcf3;
+  border: none;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* Print stylesheet — a DELIBERATELY different layout from the on-screen
+   horizontal-scroll book. Print/PDF export needs normal top-to-bottom
+   page flow with real page breaks, not a JS-driven horizontal-scrolling
+   container — browsers don't paginate horizontal overflow for print.
+   @page sets true A4 dimensions for the exported PDF itself. */
+@media print {
+  .nav, .export-btn { display: none; }
+  html, body { overflow: visible; height: auto; background: white; }
+  .book-wrap { height: auto; width: auto; display: block; perspective: none; }
+  .book { width: auto; height: auto; overflow: visible; box-shadow: none; transform: none !important; }
+  .flow {
+    columns: auto;
+    column-width: auto;
+    column-fill: auto;
+    height: auto;
+    column-rule: none;
+  }
+  .title-block { height: auto; break-after: page; }
+  .concept, .diagram-block { break-inside: avoid; }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
 </style>
 </head>
 <body>
@@ -232,138 +284,138 @@ pre.mermaid {
       <div class="flow">
         
     <div class="title-block">
-      <h1 class="title">Machine Learning Development Life Cycle (MLDLC)</h1>
-      <p class="overview">This lecture outlines the end-to-end Machine Learning Development Life Cycle (MLDLC/MLDC), presenting a standard 9-step roadmap for taking machine learning ideas from initial problem framing to deployment and production optimization.</p>
+      <h1 class="title" contenteditable="true" data-field-id="title">Machine Learning Development Life Cycle (MLDLC)</h1>
+      <p class="overview" contenteditable="true" data-field-id="overview">This lecture outlines the end-to-end Machine Learning Development Life Cycle (MLDLC/MLDC), presenting a standard 9-step roadmap for taking machine learning ideas from initial problem framing to deployment and production optimization.</p>
     </div>
     
     <div class="concept">
-      <h2>Machine Learning Development Life Cycle (MLDLC)</h2>
+      <h2 contenteditable="true" data-field-id="concept-0-name">Machine Learning Development Life Cycle (MLDLC)</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">A standardized set of guidelines and procedural phases used across the industry to build, deploy, and maintain end-to-end ML-based software products.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-what_it_is">A standardized set of guidelines and procedural phases used across the industry to build, deploy, and maintain end-to-end ML-based software products.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Modeled after the Software Development Life Cycle (SDLC), MLDLC structures ML projects into distinct iterative stages covering problem formulation, data processing, modeling, deployment, and post-launch maintenance.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-how_it_works">Modeled after the Software Development Life Cycle (SDLC), MLDLC structures ML projects into distinct iterative stages covering problem formulation, data processing, modeling, deployment, and post-launch maintenance.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Iterative framework bridging research/experimentation and production software.</li><li>Prevents common beginner mistake of only training models and stopping after measuring accuracy.</li><li>Required standard for developing production-grade, end-to-end ML applications.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-0-kp-0">Iterative framework bridging research/experimentation and production software.</li><li contenteditable="true" data-field-id="concept-0-kp-1">Prevents common beginner mistake of only training models and stopping after measuring accuracy.</li><li contenteditable="true" data-field-id="concept-0-kp-2">Required standard for developing production-grade, end-to-end ML applications.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use as a foundational development blueprint for any enterprise or production-level machine learning project.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-when_to_use">Use as a foundational development blueprint for any enterprise or production-level machine learning project.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 1: Frame the Problem</h2>
+      <h2 contenteditable="true" data-field-id="concept-1-name">Stage 1: Frame the Problem</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The requirement-gathering and scoping phase where business goals and technical problem architectures are defined.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-what_it_is">The requirement-gathering and scoping phase where business goals and technical problem architectures are defined.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">The team clarifies client goals, target audience, budget, team size, and defines whether the problem is supervised/unsupervised, online/batch, and which class of ML algorithms to consider.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-how_it_works">The team clarifies client goals, target audience, budget, team size, and defines whether the problem is supervised/unsupervised, online/batch, and which class of ML algorithms to consider.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Defines end-product vision, KPIs, and operational constraints early to avoid costly mid-project redesigns.</li><li>Determines data requirements and system execution modes (offline batch vs. real-time online inference).</li><li>Establishes initial feasibility and business value.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-1-kp-0">Defines end-product vision, KPIs, and operational constraints early to avoid costly mid-project redesigns.</li><li contenteditable="true" data-field-id="concept-1-kp-1">Determines data requirements and system execution modes (offline batch vs. real-time online inference).</li><li contenteditable="true" data-field-id="concept-1-kp-2">Establishes initial feasibility and business value.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use at the very beginning of a project before writing any code or gathering data.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-when_to_use">Use at the very beginning of a project before writing any code or gathering data.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 2: Gathering Data</h2>
+      <h2 contenteditable="true" data-field-id="concept-2-name">Stage 2: Gathering Data</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The process of collecting relevant raw data required to train machine learning models from internal or external sources.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-what_it_is">The process of collecting relevant raw data required to train machine learning models from internal or external sources.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Data is sourced via direct CSV files, hitting APIs returning JSON, web scraping unstructured web pages, extracting from operational databases/data warehouses via ETL pipelines, or querying distributed cluster tools like Apache Spark for big data.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-how_it_works">Data is sourced via direct CSV files, hitting APIs returning JSON, web scraping unstructured web pages, extracting from operational databases/data warehouses via ETL pipelines, or querying distributed cluster tools like Apache Spark for big data.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Real-world data is rarely readily available in single clean files compared to academic/competition datasets.</li><li>Utilizes techniques like ETL (Extract, Transform, Load) to feed data from production databases into warehouses.</li><li>Must store gathered data in formats readily accessible for pre-processing.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-2-kp-0">Real-world data is rarely readily available in single clean files compared to academic/competition datasets.</li><li contenteditable="true" data-field-id="concept-2-kp-1">Utilizes techniques like ETL (Extract, Transform, Load) to feed data from production databases into warehouses.</li><li contenteditable="true" data-field-id="concept-2-kp-2">Must store gathered data in formats readily accessible for pre-processing.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use right after problem framing to assemble the training and validation datasets.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-when_to_use">Use right after problem framing to assemble the training and validation datasets.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 3: Data Preprocessing</h2>
+      <h2 contenteditable="true" data-field-id="concept-3-name">Stage 3: Data Preprocessing</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">Cleaning raw data and preparing its structure to make it suitable and safe for machine learning algorithms.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-what_it_is">Cleaning raw data and preparing its structure to make it suitable and safe for machine learning algorithms.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Transforms noisy or dirty data by removing duplicates, handling missing values, removing outliers, and applying feature scaling (such as standardization or normalization) to bring features to comparable scales.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-how_it_works">Transforms noisy or dirty data by removing duplicates, handling missing values, removing outliers, and applying feature scaling (such as standardization or normalization) to bring features to comparable scales.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Prevents garbage-in, garbage-out failure modes in mathematical optimization algorithms.</li><li>Handles data compatibility and structural inconsistencies across multiple sources.</li><li>Scaling prevents distance-based algorithms from being biased toward large-magnitude numbers.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-3-kp-0">Prevents garbage-in, garbage-out failure modes in mathematical optimization algorithms.</li><li contenteditable="true" data-field-id="concept-3-kp-1">Handles data compatibility and structural inconsistencies across multiple sources.</li><li contenteditable="true" data-field-id="concept-3-kp-2">Scaling prevents distance-based algorithms from being biased toward large-magnitude numbers.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use immediately after raw data acquisition to sanitize inputs prior to analysis and model consumption.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-when_to_use">Use immediately after raw data acquisition to sanitize inputs prior to analysis and model consumption.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 4: Exploratory Data Analysis (EDA)</h2>
+      <h2 contenteditable="true" data-field-id="concept-4-name">Stage 4: Exploratory Data Analysis (EDA)</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The analytical process of investigating dataset characteristics, distributions, patterns, and anomalies using visualization and statistical methods.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-what_it_is">The analytical process of investigating dataset characteristics, distributions, patterns, and anomalies using visualization and statistical methods.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Applies univariate analysis (analyzing single features via mean, variance, distribution curves), bivariate analysis (correlating feature pairs), multivariate analysis, outlier detection, and imbalance checks (e.g., class distribution analysis in classification).</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-how_it_works">Applies univariate analysis (analyzing single features via mean, variance, distribution curves), bivariate analysis (correlating feature pairs), multivariate analysis, outlier detection, and imbalance checks (e.g., class distribution analysis in classification).</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Provides concrete understanding of hidden relationships between input features and target outputs.</li><li>Identifies class imbalances and data skews that dictate future modeling strategies.</li><li>Functions as the &#x27;tool-sharpening&#x27; phase that drastically speeds up downstream modeling decisions.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-4-kp-0">Provides concrete understanding of hidden relationships between input features and target outputs.</li><li contenteditable="true" data-field-id="concept-4-kp-1">Identifies class imbalances and data skews that dictate future modeling strategies.</li><li contenteditable="true" data-field-id="concept-4-kp-2">Functions as the &#x27;tool-sharpening&#x27; phase that drastically speeds up downstream modeling decisions.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use after data cleaning to extract statistical insights and guide feature engineering.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-when_to_use">Use after data cleaning to extract statistical insights and guide feature engineering.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 5: Feature Engineering and Selection</h2>
+      <h2 contenteditable="true" data-field-id="concept-5-name">Stage 5: Feature Engineering and Selection</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">Creating new informative features and filtering down existing variables to only those that positively contribute to model performance.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-5-what_it_is">Creating new informative features and filtering down existing variables to only those that positively contribute to model performance.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Feature engineering transforms or combines existing raw attributes into domain-meaningful columns (e.g., combining room and bathroom counts into square footage). Feature selection evaluates and drops redundant, non-impactful, or noisy features.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-5-how_it_works">Feature engineering transforms or combines existing raw attributes into domain-meaningful columns (e.g., combining room and bathroom counts into square footage). Feature selection evaluates and drops redundant, non-impactful, or noisy features.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Reduces dimensionality to speed up training and prevent the curse of dimensionality.</li><li>Domain-specific features directly boost machine learning model predictive power.</li><li>Removes irrelevant features that do not significantly influence the output.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-5-kp-0">Reduces dimensionality to speed up training and prevent the curse of dimensionality.</li><li contenteditable="true" data-field-id="concept-5-kp-1">Domain-specific features directly boost machine learning model predictive power.</li><li contenteditable="true" data-field-id="concept-5-kp-2">Removes irrelevant features that do not significantly influence the output.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use after EDA to optimize the input feature representation prior to training models.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-5-when_to_use">Use after EDA to optimize the input feature representation prior to training models.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 6: Model Training, Evaluation, and Selection</h2>
+      <h2 contenteditable="true" data-field-id="concept-6-name">Stage 6: Model Training, Evaluation, and Selection</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The iterative experimentation phase where multiple ML algorithms are trained, hyperparameter-tuned, evaluated against performance metrics, or combined via ensembles.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-6-what_it_is">The iterative experimentation phase where multiple ML algorithms are trained, hyperparameter-tuned, evaluated against performance metrics, or combined via ensembles.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Diverse algorithm families (linear models, tree ensembles, neural networks) are trained on prepared data. Performance is measured using domain metrics (Accuracy, Mean Squared Error, Dunn&#x27;s Index). Models are tuned via hyperparameter tuning, and multiple models may be combined using ensemble techniques (bagging, boosting, stacking).</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-6-how_it_works">Diverse algorithm families (linear models, tree ensembles, neural networks) are trained on prepared data. Performance is measured using domain metrics (Accuracy, Mean Squared Error, Dunn&#x27;s Index). Models are tuned via hyperparameter tuning, and multiple models may be combined using ensemble techniques (bagging, boosting, stacking).</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Never rely on a single algorithm; benchmark across multiple algorithmic paradigms.</li><li>Hyperparameter tuning optimizes settings to squeeze maximum performance out of selected algorithms.</li><li>Ensemble learning aggregates predictions from multiple diverse models to boost overall accuracy and robustness.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-6-kp-0">Never rely on a single algorithm; benchmark across multiple algorithmic paradigms.</li><li contenteditable="true" data-field-id="concept-6-kp-1">Hyperparameter tuning optimizes settings to squeeze maximum performance out of selected algorithms.</li><li contenteditable="true" data-field-id="concept-6-kp-2">Ensemble learning aggregates predictions from multiple diverse models to boost overall accuracy and robustness.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use to discover, tune, and validate the most effective model for the target problem.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-6-when_to_use">Use to discover, tune, and validate the most effective model for the target problem.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 7: Model Deployment</h2>
+      <h2 contenteditable="true" data-field-id="concept-7-name">Stage 7: Model Deployment</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The process of integrating the trained model into a production environment where it can receive inputs and serve live inference requests to end-users.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-7-what_it_is">The process of integrating the trained model into a production environment where it can receive inputs and serve live inference requests to end-users.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">The model is serialized into a binary format (e.g., using Python&#x27;s `pickle`), wrapped into an API endpoint, hosted on a backend server (e.g., Heroku, AWS, GCP), and integrated with user-facing clients (web or mobile apps) via JSON request/response pipelines.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-7-how_it_works">The model is serialized into a binary format (e.g., using Python&#x27;s `pickle`), wrapped into an API endpoint, hosted on a backend server (e.g., Heroku, AWS, GCP), and integrated with user-facing clients (web or mobile apps) via JSON request/response pipelines.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Converts an experimental model artifact into an accessible software service.</li><li>Decouples model inference logic from user interface via REST APIs.</li><li>Requires cloud infrastructure setup (AWS, GCP, Heroku) to manage availability.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-7-kp-0">Converts an experimental model artifact into an accessible software service.</li><li contenteditable="true" data-field-id="concept-7-kp-1">Decouples model inference logic from user interface via REST APIs.</li><li contenteditable="true" data-field-id="concept-7-kp-2">Requires cloud infrastructure setup (AWS, GCP, Heroku) to manage availability.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use once a candidate model passes offline validation and is ready for integration into production software.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-7-when_to_use">Use once a candidate model passes offline validation and is ready for integration into production software.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 8: Testing (A/B Testing)</h2>
+      <h2 contenteditable="true" data-field-id="concept-8-name">Stage 8: Testing (A/B Testing)</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">Validating the newly deployed model against real-world users under live production conditions.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-8-what_it_is">Validating the newly deployed model against real-world users under live production conditions.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">The model is rolled out progressively to a subset of trusted or randomized users (beta testing / A/B testing). User interaction, accuracy, and operational feedback are compared against baselines before wider rollout.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-8-how_it_works">The model is rolled out progressively to a subset of trusted or randomized users (beta testing / A/B testing). User interaction, accuracy, and operational feedback are compared against baselines before wider rollout.</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Mitigates business risk by preventing sudden catastrophic failures across the full user base.</li><li>Identifies regressions and discrepancies between offline validation data and real user data.</li><li>Triggers feedback loops to revisit earlier pipeline stages if live metrics fall below expectations.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-8-kp-0">Mitigates business risk by preventing sudden catastrophic failures across the full user base.</li><li contenteditable="true" data-field-id="concept-8-kp-1">Identifies regressions and discrepancies between offline validation data and real user data.</li><li contenteditable="true" data-field-id="concept-8-kp-2">Triggers feedback loops to revisit earlier pipeline stages if live metrics fall below expectations.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use immediately after deployment to assess live production impact before 100% rollout.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-8-when_to_use">Use immediately after deployment to assess live production impact before 100% rollout.</div>
     </div>
     
     <div class="concept">
-      <h2>Stage 9: Optimization &amp; Maintenance</h2>
+      <h2 contenteditable="true" data-field-id="concept-9-name">Stage 9: Optimization &amp; Maintenance</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">The continuous operations, scalability management, and retraining lifecycle required to keep the production ML system reliable and performant.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-9-what_it_is">The continuous operations, scalability management, and retraining lifecycle required to keep the production ML system reliable and performant.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Engineers configure model/database backup and rollback mechanisms, set up server load balancers for traffic spikes, and automate retraining pipelines to counter model rotting (drift caused by evolving real-world data patterns).</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-9-how_it_works">Engineers configure model/database backup and rollback mechanisms, set up server load balancers for traffic spikes, and automate retraining pipelines to counter model rotting (drift caused by evolving real-world data patterns).</div>
       
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Counteracts model rotting (performance degradation over time due to data/concept drift).</li><li>Requires defined retraining schedules (e.g., weekly or monthly) and automation.</li><li>Maintains high availability using load balancing, automated rollbacks, and disaster recovery backups.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-9-kp-0">Counteracts model rotting (performance degradation over time due to data/concept drift).</li><li contenteditable="true" data-field-id="concept-9-kp-1">Requires defined retraining schedules (e.g., weekly or monthly) and automation.</li><li contenteditable="true" data-field-id="concept-9-kp-2">Maintains high availability using load balancing, automated rollbacks, and disaster recovery backups.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Use continuously throughout the entire operational lifetime of a deployed production ML system.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-9-when_to_use">Use continuously throughout the entire operational lifetime of a deployed production ML system.</div>
     </div>
     
     <div class="diagram-block">
@@ -407,6 +459,7 @@ pre.mermaid {
     <button id="prevBtn">&larr; Prev</button>
     <span class="counter" id="pageCounter"></span>
     <button id="nextBtn">Next &rarr;</button>
+    <button id="exportBtn" class="export-btn">Export PDF</button>
   </div>
 
 <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, look: 'handDrawn', theme: 'neutral' });</script>
@@ -468,6 +521,42 @@ pre.mermaid {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(updateUI, 80);
   });
+
+  // --- Editable text persistence ---
+  // Storage is scoped by the file's own path (location.pathname), so
+  // each note's edits are independent without needing any ID passed in
+  // from Python — every note already has a unique file path. Only plain
+  // TEXT is saved per field (never diagram/mermaid content is touched),
+  // which sidesteps any risk of corrupting a rendered diagram's SVG.
+  const STORAGE_PREFIX = 'virtualshelf:' + window.location.pathname + ':';
+  const editableFields = document.querySelectorAll('[data-field-id]');
+
+  editableFields.forEach((el) => {
+    const key = STORAGE_PREFIX + el.dataset.fieldId;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      el.textContent = saved;
+    }
+
+    let saveTimeout;
+    el.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(key, el.textContent);
+      }, 400);
+    });
+  });
+
+  // --- PDF export ---
+  // Uses the browser's own native print-to-PDF (window.print(), then the
+  // person chooses "Save as PDF" in the print dialog) — no new library,
+  // no paid service, works entirely offline. The @media print stylesheet
+  // (see _CSS) reflows content into normal top-to-bottom pages just for
+  // this, independent of the on-screen horizontal-scroll book view.
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => window.print());
+  }
 
   updateUI();
 </script>

@@ -224,6 +224,58 @@ pre.mermaid {
 
 .nav button:disabled { opacity: 0.35; cursor: default; }
 .nav .counter { min-width: 70px; text-align: center; }
+
+/* Editable-field affordance — a subtle dashed outline on hover so it's
+   discoverable that text can be clicked and edited, without visually
+   cluttering the page when the person isn't actively interacting. */
+[contenteditable="true"]:hover {
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+[contenteditable="true"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: rgba(44, 95, 124, 0.05);
+}
+
+.export-btn {
+  background: var(--accent);
+  color: #fdfcf3;
+  border: none;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* Print stylesheet — a DELIBERATELY different layout from the on-screen
+   horizontal-scroll book. Print/PDF export needs normal top-to-bottom
+   page flow with real page breaks, not a JS-driven horizontal-scrolling
+   container — browsers don't paginate horizontal overflow for print.
+   @page sets true A4 dimensions for the exported PDF itself. */
+@media print {
+  .nav, .export-btn { display: none; }
+  html, body { overflow: visible; height: auto; background: white; }
+  .book-wrap { height: auto; width: auto; display: block; perspective: none; }
+  .book { width: auto; height: auto; overflow: visible; box-shadow: none; transform: none !important; }
+  .flow {
+    columns: auto;
+    column-width: auto;
+    column-fill: auto;
+    height: auto;
+    column-rule: none;
+  }
+  .title-block { height: auto; break-after: page; }
+  .concept, .diagram-block { break-inside: avoid; }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
 </style>
 </head>
 <body>
@@ -232,17 +284,17 @@ pre.mermaid {
       <div class="flow">
         
     <div class="title-block">
-      <h1 class="title">Scikit-Learn Pipelines: End-to-End Machine Learning Workflows</h1>
-      <p class="overview">This lecture explains the purpose, architecture, and practical implementation of Scikit-Learn Pipelines. It demonstrates the differences between building ML workflows manually versus using pipelines for automated preprocessing, model training, hyperparameter tuning, and production deployment.</p>
+      <h1 class="title" contenteditable="true" data-field-id="title">Scikit-Learn Pipelines: End-to-End Machine Learning Workflows</h1>
+      <p class="overview" contenteditable="true" data-field-id="overview">This lecture explains the purpose, architecture, and practical implementation of Scikit-Learn Pipelines. It demonstrates the differences between building ML workflows manually versus using pipelines for automated preprocessing, model training, hyperparameter tuning, and production deployment.</p>
     </div>
     
     <div class="concept">
-      <h2>Scikit-Learn Pipeline</h2>
+      <h2 contenteditable="true" data-field-id="concept-0-name">Scikit-Learn Pipeline</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">A utility class in Scikit-Learn that sequentially chains together multiple data transformation steps and a final estimator into a single composite object.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-what_it_is">A utility class in Scikit-Learn that sequentially chains together multiple data transformation steps and a final estimator into a single composite object.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">When `fit` is called, the pipeline executes `fit_transform` (or `transform`) sequentially across all intermediate transformer steps, passing the output of each step as the input to the next step, before finally fitting the estimator. During `predict`, incoming data automatically passes through all intermediate `transform` steps before generating predictions.</div>
-      <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.pipeline import Pipeline
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-how_it_works">When `fit` is called, the pipeline executes `fit_transform` (or `transform`) sequentially across all intermediate transformer steps, passing the output of each step as the input to the next step, before finally fitting the estimator. During `predict`, incoming data automatically passes through all intermediate `transform` steps before generating predictions.</div>
+      <div class="field-label">Syntax / usage</div><div class="syntax-box" contenteditable="true" data-field-id="concept-0-syntax">from sklearn.pipeline import Pipeline
 
 pipe = Pipeline([
     (&#x27;imputer&#x27;, trf1),
@@ -254,34 +306,34 @@ pipe = Pipeline([
 pipe.fit(X_train, y_train)
 pipe.predict(X_test)</div>
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Encapsulates all preprocessing and modeling logic into a single exportable artifact (`pickle`), preventing code duplication between training and production.</li><li>Guarantees that identical transformations applied during training are applied seamlessly to raw inference data without manual reconstruction.</li><li>If no estimator is included at the end, the pipeline functions as a multi-stage transformer using `fit_transform`.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-0-kp-0">Encapsulates all preprocessing and modeling logic into a single exportable artifact (`pickle`), preventing code duplication between training and production.</li><li contenteditable="true" data-field-id="concept-0-kp-1">Guarantees that identical transformations applied during training are applied seamlessly to raw inference data without manual reconstruction.</li><li contenteditable="true" data-field-id="concept-0-kp-2">If no estimator is included at the end, the pipeline functions as a multi-stage transformer using `fit_transform`.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">Whenever building reproducible ML workflows requiring multiple sequential data transformations (imputation, encoding, scaling, feature selection) prior to model training or production deployment.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-0-when_to_use">Whenever building reproducible ML workflows requiring multiple sequential data transformations (imputation, encoding, scaling, feature selection) prior to model training or production deployment.</div>
     </div>
     
     <div class="concept">
-      <h2>make_pipeline Convenience Function</h2>
+      <h2 contenteditable="true" data-field-id="concept-1-name">make_pipeline Convenience Function</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">A shorthand factory function in Scikit-Learn that constructs a `Pipeline` without requiring explicit string names for each step.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-what_it_is">A shorthand factory function in Scikit-Learn that constructs a `Pipeline` without requiring explicit string names for each step.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">It accepts transformer and estimator instances as positional arguments and automatically generates step names based on the lowercase class names of each object (e.g., `simpleimputer`, `columntransformer-1`).</div>
-      <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.pipeline import make_pipeline
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-how_it_works">It accepts transformer and estimator instances as positional arguments and automatically generates step names based on the lowercase class names of each object (e.g., `simpleimputer`, `columntransformer-1`).</div>
+      <div class="field-label">Syntax / usage</div><div class="syntax-box" contenteditable="true" data-field-id="concept-1-syntax">from sklearn.pipeline import make_pipeline
 
 pipe = make_pipeline(trf1, trf2, trf3, clf)
 pipe.fit(X_train, y_train)</div>
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Reduces boilerplate syntax compared to the standard `Pipeline` constructor.</li><li>Auto-generated step names can make debugging or specifying hyperparameter grids in `GridSearchCV` less explicit than custom-named steps.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-1-kp-0">Reduces boilerplate syntax compared to the standard `Pipeline` constructor.</li><li contenteditable="true" data-field-id="concept-1-kp-1">Auto-generated step names can make debugging or specifying hyperparameter grids in `GridSearchCV` less explicit than custom-named steps.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When quickly assembling straightforward pipelines where explicit custom step names are not necessary.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-1-when_to_use">When quickly assembling straightforward pipelines where explicit custom step names are not necessary.</div>
     </div>
     
     <div class="concept">
-      <h2>Index-Based Column Selection in Chained ColumnTransformers</h2>
+      <h2 contenteditable="true" data-field-id="concept-2-name">Index-Based Column Selection in Chained ColumnTransformers</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">A technique of referencing DataFrame/array columns by integer indices rather than string column names inside `ColumnTransformer` steps within a pipeline.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-what_it_is">A technique of referencing DataFrame/array columns by integer indices rather than string column names inside `ColumnTransformer` steps within a pipeline.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">Because intermediate Scikit-Learn transformers output NumPy arrays that lack pandas column names, downstream `ColumnTransformer` steps cannot access columns by name. Passing integer column indices or slices (e.g., `[2]`, `[1, 6]`, `slice(0, 10)`) allows transformers to correctly locate target features across intermediate array outputs.</div>
-      <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.compose import ColumnTransformer
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-how_it_works">Because intermediate Scikit-Learn transformers output NumPy arrays that lack pandas column names, downstream `ColumnTransformer` steps cannot access columns by name. Passing integer column indices or slices (e.g., `[2]`, `[1, 6]`, `slice(0, 10)`) allows transformers to correctly locate target features across intermediate array outputs.</div>
+      <div class="field-label">Syntax / usage</div><div class="syntax-box" contenteditable="true" data-field-id="concept-2-syntax">from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 
 trf1 = ColumnTransformer([
@@ -289,36 +341,36 @@ trf1 = ColumnTransformer([
     (&#x27;impute_embarked&#x27;, SimpleImputer(strategy=&#x27;most_frequent&#x27;), [6])
 ], remainder=&#x27;passthrough&#x27;)</div>
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>String column names fail in subsequent steps because previous transformers convert pandas DataFrames into NumPy arrays.</li><li>Requires tracking the expansion and contraction of column indices when operations like One-Hot Encoding add new feature columns.</li><li>Setting `remainder=&#x27;passthrough&#x27;` is essential to keep untouched columns moving forward through the pipeline.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-2-kp-0">String column names fail in subsequent steps because previous transformers convert pandas DataFrames into NumPy arrays.</li><li contenteditable="true" data-field-id="concept-2-kp-1">Requires tracking the expansion and contraction of column indices when operations like One-Hot Encoding add new feature columns.</li><li contenteditable="true" data-field-id="concept-2-kp-2">Setting `remainder=&#x27;passthrough&#x27;` is essential to keep untouched columns moving forward through the pipeline.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When chaining multiple `ColumnTransformer` instances sequentially inside a Scikit-Learn pipeline.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-2-when_to_use">When chaining multiple `ColumnTransformer` instances sequentially inside a Scikit-Learn pipeline.</div>
     </div>
     
     <div class="concept">
-      <h2>Pipeline Inspection and HTML Diagram Visualization</h2>
+      <h2 contenteditable="true" data-field-id="concept-3-name">Pipeline Inspection and HTML Diagram Visualization</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">Features in Scikit-Learn for inspecting internal step parameters and rendering visual interactive diagrams of pipeline architectures.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-what_it_is">Features in Scikit-Learn for inspecting internal step parameters and rendering visual interactive diagrams of pipeline architectures.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">`set_config(display=&#x27;diagram&#x27;)` enables visual block-diagram rendering of pipeline graphs in Jupyter notebook outputs. The `named_steps` dictionary attribute allows direct programmatic access to individual fitted transformer objects and their learned attributes (e.g., mean imputation values, learned encodings).</div>
-      <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn import set_config
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-how_it_works">`set_config(display=&#x27;diagram&#x27;)` enables visual block-diagram rendering of pipeline graphs in Jupyter notebook outputs. The `named_steps` dictionary attribute allows direct programmatic access to individual fitted transformer objects and their learned attributes (e.g., mean imputation values, learned encodings).</div>
+      <div class="field-label">Syntax / usage</div><div class="syntax-box" contenteditable="true" data-field-id="concept-3-syntax">from sklearn import set_config
 set_config(display=&#x27;diagram&#x27;)
 
 # Inspect fitted step parameters
 mean_age = pipe.named_steps[&#x27;trf1&#x27;].transformers_[0][1].statistics_
 print(pipe.named_steps[&#x27;trf5&#x27;].classes_)</div>
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>`pipe.named_steps` exposes each pipeline stage as a key-value dictionary for debugging.</li><li>Interactive diagrams allow users to click into nested components to verify transformer configurations and estimators.</li><li>Facilitates auditing learned statistics (like imputer means or scaler min/max values) without disassembling the pipeline.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-3-kp-0">`pipe.named_steps` exposes each pipeline stage as a key-value dictionary for debugging.</li><li contenteditable="true" data-field-id="concept-3-kp-1">Interactive diagrams allow users to click into nested components to verify transformer configurations and estimators.</li><li contenteditable="true" data-field-id="concept-3-kp-2">Facilitates auditing learned statistics (like imputer means or scaler min/max values) without disassembling the pipeline.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">During model development, debugging, and verification to inspect intermediate transformation parameters and validate pipeline topologies.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-3-when_to_use">During model development, debugging, and verification to inspect intermediate transformation parameters and validate pipeline topologies.</div>
     </div>
     
     <div class="concept">
-      <h2>Cross-Validation and GridSearch with Pipelines</h2>
+      <h2 contenteditable="true" data-field-id="concept-4-name">Cross-Validation and GridSearch with Pipelines</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">Evaluating and tuning pipeline hyperparameters using `cross_val_score` and `GridSearchCV` while eliminating data leakage.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-what_it_is">Evaluating and tuning pipeline hyperparameters using `cross_val_score` and `GridSearchCV` while eliminating data leakage.</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">`cross_val_score` fits the entire preprocessing pipeline on each training fold independently before evaluating on validation folds. `GridSearchCV` tunes parameters across any step in the pipeline using a double-underscore naming convention (`&lt;step_name&gt;__&lt;parameter_name&gt;`).</div>
-      <div class="field-label">Syntax / usage</div><div class="syntax-box">from sklearn.model_selection import cross_val_score, GridSearchCV
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-how_it_works">`cross_val_score` fits the entire preprocessing pipeline on each training fold independently before evaluating on validation folds. `GridSearchCV` tunes parameters across any step in the pipeline using a double-underscore naming convention (`&lt;step_name&gt;__&lt;parameter_name&gt;`).</div>
+      <div class="field-label">Syntax / usage</div><div class="syntax-box" contenteditable="true" data-field-id="concept-4-syntax">from sklearn.model_selection import cross_val_score, GridSearchCV
 
 # Cross-validation
 scores = cross_val_score(pipe, X_train, y_train, cv=5, scoring=&#x27;accuracy&#x27;)
@@ -328,9 +380,9 @@ param_grid = {&#x27;trf5__max_depth&#x27;: [1, 2, 3, 4, 5, None]}
 grid = GridSearchCV(pipe, param_grid, cv=5, scoring=&#x27;accuracy&#x27;)
 grid.fit(X_train, y_train)</div>
       <div class="field-label">Key points</div>
-      <ul class="key-points"><li>Prevents data leakage by ensuring preprocessing statistics (imputation means, scaling limits) are computed strictly on training folds.</li><li>Parameters belonging to specific pipeline steps are addressed in the grid via `&lt;step_name&gt;__&lt;param_name&gt;`.</li><li>Enables simultaneous optimization of preprocessing parameters and model hyperparameters in a single search.</li></ul>
+      <ul class="key-points"><li contenteditable="true" data-field-id="concept-4-kp-0">Prevents data leakage by ensuring preprocessing statistics (imputation means, scaling limits) are computed strictly on training folds.</li><li contenteditable="true" data-field-id="concept-4-kp-1">Parameters belonging to specific pipeline steps are addressed in the grid via `&lt;step_name&gt;__&lt;param_name&gt;`.</li><li contenteditable="true" data-field-id="concept-4-kp-2">Enables simultaneous optimization of preprocessing parameters and model hyperparameters in a single search.</li></ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">When tuning model and preprocessing hyperparameters simultaneously or validating model performance across cross-validation folds.</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-4-when_to_use">When tuning model and preprocessing hyperparameters simultaneously or validating model performance across cross-validation folds.</div>
     </div>
     
     <div class="diagram-block">
@@ -362,6 +414,7 @@ SelectKBest k=8]
     <button id="prevBtn">&larr; Prev</button>
     <span class="counter" id="pageCounter"></span>
     <button id="nextBtn">Next &rarr;</button>
+    <button id="exportBtn" class="export-btn">Export PDF</button>
   </div>
 
 <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, look: 'handDrawn', theme: 'neutral' });</script>
@@ -423,6 +476,42 @@ SelectKBest k=8]
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(updateUI, 80);
   });
+
+  // --- Editable text persistence ---
+  // Storage is scoped by the file's own path (location.pathname), so
+  // each note's edits are independent without needing any ID passed in
+  // from Python — every note already has a unique file path. Only plain
+  // TEXT is saved per field (never diagram/mermaid content is touched),
+  // which sidesteps any risk of corrupting a rendered diagram's SVG.
+  const STORAGE_PREFIX = 'virtualshelf:' + window.location.pathname + ':';
+  const editableFields = document.querySelectorAll('[data-field-id]');
+
+  editableFields.forEach((el) => {
+    const key = STORAGE_PREFIX + el.dataset.fieldId;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      el.textContent = saved;
+    }
+
+    let saveTimeout;
+    el.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(key, el.textContent);
+      }, 400);
+    });
+  });
+
+  // --- PDF export ---
+  // Uses the browser's own native print-to-PDF (window.print(), then the
+  // person chooses "Save as PDF" in the print dialog) — no new library,
+  // no paid service, works entirely offline. The @media print stylesheet
+  // (see _CSS) reflows content into normal top-to-bottom pages just for
+  // this, independent of the on-screen horizontal-scroll book view.
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => window.print());
+  }
 
   updateUI();
 </script>

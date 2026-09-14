@@ -300,6 +300,58 @@ pre.mermaid {
 
 .nav button:disabled { opacity: 0.35; cursor: default; }
 .nav .counter { min-width: 70px; text-align: center; }
+
+/* Editable-field affordance — a subtle dashed outline on hover so it's
+   discoverable that text can be clicked and edited, without visually
+   cluttering the page when the person isn't actively interacting. */
+[contenteditable="true"]:hover {
+  outline: 1px dashed var(--accent);
+  outline-offset: 2px;
+  cursor: text;
+}
+
+[contenteditable="true"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  background: rgba(44, 95, 124, 0.05);
+}
+
+.export-btn {
+  background: var(--accent);
+  color: #fdfcf3;
+  border: none;
+  font-family: 'Kalam', cursive;
+  font-size: 1em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* Print stylesheet — a DELIBERATELY different layout from the on-screen
+   horizontal-scroll book. Print/PDF export needs normal top-to-bottom
+   page flow with real page breaks, not a JS-driven horizontal-scrolling
+   container — browsers don't paginate horizontal overflow for print.
+   @page sets true A4 dimensions for the exported PDF itself. */
+@media print {
+  .nav, .export-btn { display: none; }
+  html, body { overflow: visible; height: auto; background: white; }
+  .book-wrap { height: auto; width: auto; display: block; perspective: none; }
+  .book { width: auto; height: auto; overflow: visible; box-shadow: none; transform: none !important; }
+  .flow {
+    columns: auto;
+    column-width: auto;
+    column-fill: auto;
+    height: auto;
+    column-rule: none;
+  }
+  .title-block { height: auto; break-after: page; }
+  .concept, .diagram-block { break-inside: avoid; }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
 """
 
 _NAV_SCRIPT = """
@@ -361,6 +413,42 @@ _NAV_SCRIPT = """
     scrollTimeout = setTimeout(updateUI, 80);
   });
 
+  // --- Editable text persistence ---
+  // Storage is scoped by the file's own path (location.pathname), so
+  // each note's edits are independent without needing any ID passed in
+  // from Python — every note already has a unique file path. Only plain
+  // TEXT is saved per field (never diagram/mermaid content is touched),
+  // which sidesteps any risk of corrupting a rendered diagram's SVG.
+  const STORAGE_PREFIX = 'virtualshelf:' + window.location.pathname + ':';
+  const editableFields = document.querySelectorAll('[data-field-id]');
+
+  editableFields.forEach((el) => {
+    const key = STORAGE_PREFIX + el.dataset.fieldId;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) {
+      el.textContent = saved;
+    }
+
+    let saveTimeout;
+    el.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem(key, el.textContent);
+      }, 400);
+    });
+  });
+
+  // --- PDF export ---
+  // Uses the browser's own native print-to-PDF (window.print(), then the
+  // person chooses "Save as PDF" in the print dialog) — no new library,
+  // no paid service, works entirely offline. The @media print stylesheet
+  // (see _CSS) reflows content into normal top-to-bottom pages just for
+  // this, independent of the on-screen horizontal-scroll book view.
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => window.print());
+  }
+
   updateUI();
 </script>
 """
@@ -373,36 +461,38 @@ def _esc(text: str) -> str:
 def _title_block(data: dict) -> str:
     return f"""
     <div class="title-block">
-      <h1 class="title">{_esc(data['title'])}</h1>
-      <p class="overview">{_esc(data['overview'])}</p>
+      <h1 class="title" contenteditable="true" data-field-id="title">{_esc(data['title'])}</h1>
+      <p class="overview" contenteditable="true" data-field-id="overview">{_esc(data['overview'])}</p>
     </div>
     """
 
 
-def _concept_block(concept: dict) -> str:
+def _concept_block(concept: dict, index: int) -> str:
     syntax = concept.get("syntax", "")
     syntax_html = (
         f'<div class="field-label">Syntax / usage</div>'
-        f'<div class="syntax-box">{_esc(syntax)}</div>'
+        f'<div class="syntax-box" contenteditable="true" '
+        f'data-field-id="concept-{index}-syntax">{_esc(syntax)}</div>'
         if syntax
         else ""
     )
     key_points_html = "".join(
-        f"<li>{_esc(kp)}</li>" for kp in concept.get("key_points", [])
+        f'<li contenteditable="true" data-field-id="concept-{index}-kp-{j}">{_esc(kp)}</li>'
+        for j, kp in enumerate(concept.get("key_points", []))
     )
 
     return f"""
     <div class="concept">
-      <h2>{_esc(concept['name'])}</h2>
+      <h2 contenteditable="true" data-field-id="concept-{index}-name">{_esc(concept['name'])}</h2>
       <div class="field-label">What it is</div>
-      <div class="field-body">{_esc(concept['what_it_is'])}</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-{index}-what_it_is">{_esc(concept['what_it_is'])}</div>
       <div class="field-label">How it works</div>
-      <div class="field-body">{_esc(concept['how_it_works'])}</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-{index}-how_it_works">{_esc(concept['how_it_works'])}</div>
       {syntax_html}
       <div class="field-label">Key points</div>
       <ul class="key-points">{key_points_html}</ul>
       <div class="field-label">When to use</div>
-      <div class="field-body">{_esc(concept['when_to_use'])}</div>
+      <div class="field-body" contenteditable="true" data-field-id="concept-{index}-when_to_use">{_esc(concept['when_to_use'])}</div>
     </div>
     """
 
@@ -419,7 +509,7 @@ def _diagram_block(diagram: dict, index: int) -> str:
 
 def render_notes_html(data: dict) -> str:
     blocks = [_title_block(data)]
-    blocks += [_concept_block(c) for c in data["concepts"]]
+    blocks += [_concept_block(c, i) for i, c in enumerate(data["concepts"])]
     blocks += [_diagram_block(d, i) for i, d in enumerate(data["diagrams"], 1)]
     blocks_html = "".join(blocks)
 
@@ -444,6 +534,7 @@ def render_notes_html(data: dict) -> str:
     <button id="prevBtn">&larr; Prev</button>
     <span class="counter" id="pageCounter"></span>
     <button id="nextBtn">Next &rarr;</button>
+    <button id="exportBtn" class="export-btn">Export PDF</button>
   </div>
 
 {_MERMAID_SCRIPT}
