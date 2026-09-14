@@ -79,7 +79,12 @@ p.shelf-subtitle {
 }
 
 .spine {
-  height: 210px;
+  /* A4 ratio (595:842, same as the actual note pages) via aspect-ratio
+     rather than a fixed height — this way the card stays true to real
+     page proportions no matter how wide the grid makes each column,
+     instead of drifting off-ratio at different screen widths. */
+  aspect-ratio: 595 / 842;
+  width: 100%;
   border-radius: 4px 8px 8px 4px;
   box-shadow:
     inset 4px 0 0 rgba(0,0,0,0.15),

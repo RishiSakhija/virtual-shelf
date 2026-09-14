@@ -12,9 +12,21 @@
   --line: #b9d4e8;
   --margin-line: #e2a3a3;
   --accent: #2c5f7c;
+  --page-w: 595px;
+  --page-h: 842px;
 }
 
 * { box-sizing: border-box; }
+
+/* Defensive: guarantees no single long word/URL/identifier can ever
+   push content past a page's width, regardless of what Gemini generates.
+   Without this, the specific width-clipping bug we just fixed could
+   resurface for a totally different reason (unbreakable text) rather
+   than the column-width arithmetic mistake that caused it originally. */
+h1, h2, p, li, div {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 
 html, body {
   margin: 0;
@@ -25,129 +37,162 @@ html, body {
   color: var(--ink);
 }
 
-.book {
+.book-wrap {
   height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: row;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-}
-
-.sheet {
-  flex: 0 0 100vw;
-  height: 100vh;
-  scroll-snap-align: start;
-  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px;
+  perspective: 1800px;
 }
 
-/* FIXED height, not max-height — this is what makes every page the
-   same size regardless of content length. Overflow scrolls WITHIN
-   the page instead of the page itself resizing. */
-.sheet-inner {
-  max-width: 780px;
-  width: 100%;
-  height: 720px;
-  overflow-y: auto;
-  background:
+.book {
+  width: var(--page-w);
+  height: var(--page-h);
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+  transform-style: preserve-3d;
+}
+
+.book.turning {
+  transform: rotateY(-10deg) scale(0.96);
+  box-shadow: 0 30px 50px rgba(0,0,0,0.45);
+}
+
+/* The actual pagination mechanism: content flows continuously and the
+   browser breaks it into page-width columns automatically. Two layered
+   backgrounds recreate the per-page paper look despite columns sharing
+   one continuous background: horizontal ruled lines (repeats vertically,
+   looks correct at any page since it only depends on Y position) and a
+   red margin line (repeats horizontally with period = one page width,
+   so it lands at the same offset on every page). */
+.flow {
+  columns: 1;
+  column-width: var(--page-w);
+  column-gap: 0;
+  column-rule: 1px dashed rgba(0,0,0,0.15);
+  column-fill: auto;
+  height: var(--page-h);
+  background-color: var(--paper);
+  background-image:
     repeating-linear-gradient(
       var(--paper),
       var(--paper) 34px,
       var(--line) 35px
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 40px,
+      var(--margin-line) 40px,
+      var(--margin-line) 42px,
+      transparent 42px,
+      transparent var(--page-w)
     );
-  background-attachment: local;
-  border-radius: 4px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-  padding: 44px 36px 44px 66px;
-  position: relative;
+  padding: 30px 0;
 }
 
-.sheet-inner::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 42px;
-  width: 2px;
-  background: var(--margin-line);
-  opacity: 0.6;
+.title-block {
+  break-after: column;
+  padding: 40px 30px 0 60px;
+  /* Fills the exact visible page area (page height minus .flow's own
+     30px top+bottom padding) so the dark background covers the whole
+     page with no ruled-paper bleeding through below it. Safe to do this
+     time: break-after:column guarantees NOTHING else ever shares this
+     page, unlike the earlier StPageFlip attempt where a third-party
+     library's own hard-page/pairing logic was what caused content to
+     bleed between the cover and page 1 (see docs/DECISIONS.md #9) —
+     that failure mode doesn't exist here at all. */
+  height: calc(var(--page-h) - 60px);
+  background: linear-gradient(135deg, var(--accent), #1d4054);
+  color: #fdfcf3;
+}
+
+.title-block h1.title,
+.title-block p.overview {
+  color: #fdfcf3;
 }
 
 h1.title {
-  font-size: 2.1em;
-  margin: 0 0 4px 0;
+  font-size: 2em;
+  margin: 0 0 8px 0;
   color: var(--accent);
   transform: rotate(-0.4deg);
 }
 
 p.overview {
-  font-size: 1.15em;
+  font-size: 1.05em;
   color: var(--ink-soft);
-  margin-top: 20px;
+}
+
+.concept, .diagram-block {
+  break-inside: avoid;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 30px 0 60px;
+  margin-bottom: 30px;
 }
 
 .concept h2 {
-  font-size: 1.6em;
-  margin: 0 0 14px 0;
+  font-size: 1.4em;
+  margin: 0 0 10px 0;
   color: var(--accent);
-  display: inline-block;
   transform: rotate(-0.3deg);
 }
 
 .field-label {
   font-weight: 700;
   color: var(--accent);
-  font-size: 1.05em;
-  margin-top: 14px;
+  font-size: 1em;
+  margin-top: 10px;
 }
 
 .field-body {
   margin: 2px 0 0 4px;
-  font-size: 1.08em;
-  line-height: 1.55;
+  font-size: 1em;
+  line-height: 1.5;
 }
 
 .syntax-box {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.9em;
+  font-size: 0.82em;
   background: #f4f1e6;
   border: 1px solid #d8d2bd;
   border-left: 4px solid var(--accent);
   border-radius: 3px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   margin-top: 6px;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   color: #333;
 }
 
 .key-points {
-  margin: 4px 0 0 20px;
+  margin: 4px 0 0 18px;
   padding: 0;
 }
 
 .key-points li {
   margin-bottom: 4px;
-  font-size: 1.08em;
+  font-size: 1em;
 }
 
 .diagram-title {
   font-weight: 700;
-  font-size: 1.4em;
-  margin-bottom: 14px;
+  font-size: 1.2em;
+  margin-bottom: 10px;
   color: var(--accent);
-  transform: rotate(-0.3deg);
 }
 
 pre.mermaid {
   background: #fbfaf3;
   border: 1px solid #d8d2bd;
   border-radius: 6px;
-  padding: 12px;
+  padding: 10px;
   overflow-x: auto;
+  font-size: 0.78em;
 }
 
 .nav {
@@ -165,7 +210,6 @@ pre.mermaid {
   font-family: 'Kalam', cursive;
   font-size: 1em;
   z-index: 10;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
 }
 
 .nav button {
@@ -178,91 +222,75 @@ pre.mermaid {
   padding: 2px 8px;
 }
 
-.nav button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.nav .counter {
-  min-width: 70px;
-  text-align: center;
-}
+.nav button:disabled { opacity: 0.35; cursor: default; }
+.nav .counter { min-width: 70px; text-align: center; }
 </style>
 </head>
 <body>
-  <div class="book">
-    
-    <section class="sheet">
-      <div class="sheet-inner">
-        <h1 class="title">Introduction to Model Context Protocol (MCP)</h1>
-        <p class="overview">An architectural breakdown of the Model Context Protocol (MCP), an open-source standard designed to connect AI agents to external data sources such as databases, APIs, and local code environments.</p>
-      </div>
-    </section>
-    
-    <section class="sheet">
-      <div class="sheet-inner concept">
-        <h2>Model Context Protocol (MCP)</h2>
-        <div class="field-label">What it is</div>
-        <div class="field-body">An open-source communication standard and transport layer protocol that standardizes how AI applications and agents connect to external tools and data sources.</div>
-        <div class="field-label">How it works</div>
-        <div class="field-body">Acts as an intermediary transport layer between an MCP client application and one or more MCP servers, standardizing tool discovery, request execution, and response routing.</div>
+  <div class="book-wrap">
+    <div class="book">
+      <div class="flow">
         
-        <div class="field-label">Key points</div>
-        <ul class="key-points"><li>Eliminates custom, ad-hoc integrations for every external database or API.</li><li>Separates client-side orchestration from tool execution logic.</li><li>Allows a single host or client to connect to multiple MCP servers simultaneously.</li></ul>
-        <div class="field-label">When to use</div>
-        <div class="field-body">When developing AI agents or LLM-powered applications that need reliable, standardized access to external systems like SQL/NoSQL databases, REST/GraphQL APIs, or local files.</div>
-      </div>
-    </section>
+    <div class="title-block">
+      <h1 class="title">Introduction to Model Context Protocol (MCP)</h1>
+      <p class="overview">An architectural breakdown of the Model Context Protocol (MCP), an open-source standard designed to connect AI agents to external data sources such as databases, APIs, and local code environments.</p>
+    </div>
     
-    <section class="sheet">
-      <div class="sheet-inner concept">
-        <h2>MCP Host and Client</h2>
-        <div class="field-label">What it is</div>
-        <div class="field-body">The user-facing runtime application (the host) and its internal connection interface (the client) that manage agent interaction and coordinate with LLMs.</div>
-        <div class="field-label">How it works</div>
-        <div class="field-body">The host (such as a chat application or IDE code assistant) contains one or more MCP clients. It discovers available tools from registered MCP servers, formats prompt context for the LLM, and dispatches tool execution requests.</div>
-        
-        <div class="field-label">Key points</div>
-        <ul class="key-points"><li>A single MCP host can manage one or multiple MCP clients.</li><li>Common host implementations include chat interfaces, IDE extensions, and automated workflows.</li><li>The host mediates between the user, the LLM, and the downstream MCP servers.</li></ul>
-        <div class="field-label">When to use</div>
-        <div class="field-body">When building or configuring the primary environment where user interactions occur and where agentic decisions are routed to LLMs.</div>
-      </div>
-    </section>
+    <div class="concept">
+      <h2>Model Context Protocol (MCP)</h2>
+      <div class="field-label">What it is</div>
+      <div class="field-body">An open-source communication standard and transport layer protocol that standardizes how AI applications and agents connect to external tools and data sources.</div>
+      <div class="field-label">How it works</div>
+      <div class="field-body">Acts as an intermediary transport layer between an MCP client application and one or more MCP servers, standardizing tool discovery, request execution, and response routing.</div>
+      
+      <div class="field-label">Key points</div>
+      <ul class="key-points"><li>Eliminates custom, ad-hoc integrations for every external database or API.</li><li>Separates client-side orchestration from tool execution logic.</li><li>Allows a single host or client to connect to multiple MCP servers simultaneously.</li></ul>
+      <div class="field-label">When to use</div>
+      <div class="field-body">When developing AI agents or LLM-powered applications that need reliable, standardized access to external systems like SQL/NoSQL databases, REST/GraphQL APIs, or local files.</div>
+    </div>
     
-    <section class="sheet">
-      <div class="sheet-inner concept">
-        <h2>MCP Server</h2>
-        <div class="field-label">What it is</div>
-        <div class="field-body">A lightweight service that exposes specific capabilities, data sources, or executable functions as standardized MCP tools.</div>
-        <div class="field-label">How it works</div>
-        <div class="field-body">Registers available tools with the MCP host on demand, listens for tool-use execution requests across the MCP protocol, interfaces directly with external resources (databases, APIs, or local code), and returns structured outputs.</div>
-        
-        <div class="field-label">Key points</div>
-        <ul class="key-points"><li>Agnostic to backend implementations (works with relational DBs, NoSQL, APIs, or file systems).</li><li>Hosts can connect to arbitrary numbers of independent MCP servers.</li><li>Encapsulates authentication, schema mapping, and query logic away from the LLM prompt.</li></ul>
-        <div class="field-label">When to use</div>
-        <div class="field-body">When wrapping an internal database, SaaS API, or local execution environment to expose its functionality safely to LLM agents.</div>
-      </div>
-    </section>
+    <div class="concept">
+      <h2>MCP Host and Client</h2>
+      <div class="field-label">What it is</div>
+      <div class="field-body">The user-facing runtime application (the host) and its internal connection interface (the client) that manage agent interaction and coordinate with LLMs.</div>
+      <div class="field-label">How it works</div>
+      <div class="field-body">The host (such as a chat application or IDE code assistant) contains one or more MCP clients. It discovers available tools from registered MCP servers, formats prompt context for the LLM, and dispatches tool execution requests.</div>
+      
+      <div class="field-label">Key points</div>
+      <ul class="key-points"><li>A single MCP host can manage one or multiple MCP clients.</li><li>Common host implementations include chat interfaces, IDE extensions, and automated workflows.</li><li>The host mediates between the user, the LLM, and the downstream MCP servers.</li></ul>
+      <div class="field-label">When to use</div>
+      <div class="field-body">When building or configuring the primary environment where user interactions occur and where agentic decisions are routed to LLMs.</div>
+    </div>
     
-    <section class="sheet">
-      <div class="sheet-inner concept">
-        <h2>MCP Agent Execution Workflow</h2>
-        <div class="field-label">What it is</div>
-        <div class="field-body">The multi-step interaction loop through which an MCP host discovers tools, consults an LLM, invokes tools via MCP servers, and generates a grounded response.</div>
-        <div class="field-label">How it works</div>
-        <div class="field-body">The host receives a user question, queries MCP servers for available tools, and forwards both the question and tool definitions to the LLM. When the LLM requests a tool call, the host routes it to the designated MCP server, executes against the data source, feeds the result back to the LLM, and receives the final answer.</div>
-        
-        <div class="field-label">Key points</div>
-        <ul class="key-points"><li>Tool discovery happens dynamically prior to or during the prompt assembly.</li><li>Execution is iterative: tool results can prompt subsequent tool calls or final answer generation.</li><li>The LLM decides which tool to call, but the MCP server executes the operation and retrieves real data.</li></ul>
-        <div class="field-label">When to use</div>
-        <div class="field-body">When architecting agentic request-response lifecycles that require external data grounding and tool execution.</div>
-      </div>
-    </section>
+    <div class="concept">
+      <h2>MCP Server</h2>
+      <div class="field-label">What it is</div>
+      <div class="field-body">A lightweight service that exposes specific capabilities, data sources, or executable functions as standardized MCP tools.</div>
+      <div class="field-label">How it works</div>
+      <div class="field-body">Registers available tools with the MCP host on demand, listens for tool-use execution requests across the MCP protocol, interfaces directly with external resources (databases, APIs, or local code), and returns structured outputs.</div>
+      
+      <div class="field-label">Key points</div>
+      <ul class="key-points"><li>Agnostic to backend implementations (works with relational DBs, NoSQL, APIs, or file systems).</li><li>Hosts can connect to arbitrary numbers of independent MCP servers.</li><li>Encapsulates authentication, schema mapping, and query logic away from the LLM prompt.</li></ul>
+      <div class="field-label">When to use</div>
+      <div class="field-body">When wrapping an internal database, SaaS API, or local execution environment to expose its functionality safely to LLM agents.</div>
+    </div>
     
-    <section class="sheet">
-      <div class="sheet-inner">
-        <div class="diagram-title">[1] MCP Request and Tool Execution Flow</div>
-        <pre class="mermaid">sequenceDiagram
+    <div class="concept">
+      <h2>MCP Agent Execution Workflow</h2>
+      <div class="field-label">What it is</div>
+      <div class="field-body">The multi-step interaction loop through which an MCP host discovers tools, consults an LLM, invokes tools via MCP servers, and generates a grounded response.</div>
+      <div class="field-label">How it works</div>
+      <div class="field-body">The host receives a user question, queries MCP servers for available tools, and forwards both the question and tool definitions to the LLM. When the LLM requests a tool call, the host routes it to the designated MCP server, executes against the data source, feeds the result back to the LLM, and receives the final answer.</div>
+      
+      <div class="field-label">Key points</div>
+      <ul class="key-points"><li>Tool discovery happens dynamically prior to or during the prompt assembly.</li><li>Execution is iterative: tool results can prompt subsequent tool calls or final answer generation.</li><li>The LLM decides which tool to call, but the MCP server executes the operation and retrieves real data.</li></ul>
+      <div class="field-label">When to use</div>
+      <div class="field-body">When architecting agentic request-response lifecycles that require external data grounding and tool execution.</div>
+    </div>
+    
+    <div class="diagram-block">
+      <div class="diagram-title">[1] MCP Request and Tool Execution Flow</div>
+      <pre class="mermaid">sequenceDiagram
     autonumber
     actor User
     participant Host as MCP Host / Client
@@ -282,9 +310,10 @@ pre.mermaid {
     Host-&gt;&gt;LLM: Return tool output
     LLM--&gt;&gt;Host: Final response
     Host--&gt;&gt;User: Display final answer</pre>
-      </div>
-    </section>
+    </div>
     
+      </div>
+    </div>
   </div>
 
   <div class="nav">
@@ -297,43 +326,61 @@ pre.mermaid {
 
 <script>
   const book = document.querySelector('.book');
-  const sheets = Array.from(document.querySelectorAll('.sheet'));
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
   const counter = document.getElementById('pageCounter');
-  let current = 0;
+  const pageStep = book.clientWidth;
+
+  function totalPages() {
+    return Math.max(1, Math.round(book.scrollWidth / pageStep));
+  }
+
+  function currentPage() {
+    return Math.round(book.scrollLeft / pageStep);
+  }
 
   function updateUI() {
-    counter.textContent = `Page ${current + 1} / ${sheets.length}`;
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === sheets.length - 1;
+    const cur = currentPage();
+    const total = totalPages();
+    counter.textContent = `Page ${cur + 1} / ${total}`;
+    prevBtn.disabled = cur <= 0;
+    nextBtn.disabled = cur >= total - 1;
   }
 
+  // Hand-rolled "page turn feel" — not true physical curl (see
+  // docs/DECISIONS.md for why a real page-flip library was reverted).
+  // The trick: tilt the whole book away in 3D (CSS `.turning` class),
+  // which visually obscures it briefly; WHILE hidden, instantly jump the
+  // actual scroll position (no native smooth-scroll fighting our timing);
+  // then remove the class, which transitions back to flat, "revealing"
+  // the new page. The 140ms delay is deliberately half of the CSS
+  // transition's 0.28s duration — long enough for the tilt to reach a
+  // visually obscuring angle before the jump happens underneath it.
   function goTo(index) {
-    if (index < 0 || index >= sheets.length) return;
-    current = index;
-    sheets[current].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-    updateUI();
+    const total = totalPages();
+    if (index < 0 || index >= total) return;
+
+    book.classList.add('turning');
+    setTimeout(() => {
+      book.scrollTo({ left: index * pageStep, behavior: 'auto' });
+      book.classList.remove('turning');
+      updateUI();
+    }, 140);
   }
 
-  prevBtn.addEventListener('click', () => goTo(current - 1));
-  nextBtn.addEventListener('click', () => goTo(current + 1));
+  prevBtn.addEventListener('click', () => goTo(currentPage() - 1));
+  nextBtn.addEventListener('click', () => goTo(currentPage() + 1));
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(currentPage() + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(currentPage() - 1);
   });
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        current = sheets.indexOf(entry.target);
-        updateUI();
-      }
-    });
-  }, { root: book, threshold: 0.6 });
-
-  sheets.forEach((s) => observer.observe(s));
+  let scrollTimeout;
+  book.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateUI, 80);
+  });
 
   updateUI();
 </script>
