@@ -108,6 +108,56 @@ p.shelf-subtitle {
   font-size: 1.2em;
   margin-top: 60px;
 }
+
+.add-form {
+  max-width: 600px;
+  margin: 0 auto 40px auto;
+  display: flex;
+  gap: 10px;
+}
+
+.add-form input {
+  flex: 1;
+  font-family: 'Kalam', cursive;
+  font-size: 1.05em;
+  padding: 10px 14px;
+  border: 2px solid #c9c2ab;
+  border-radius: 8px;
+  background: #fdfcf3;
+  color: #2b2b2b;
+}
+
+.add-form input:focus {
+  outline: none;
+  border-color: var(--accent, #2c5f7c);
+}
+
+.add-form button {
+  font-family: 'Kalam', cursive;
+  font-size: 1.05em;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #2c5f7c;
+  color: #fdfcf3;
+  cursor: pointer;
+}
+
+.add-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.add-status {
+  max-width: 600px;
+  margin: -20px auto 30px auto;
+  text-align: center;
+  font-size: 0.95em;
+  min-height: 1.4em;
+}
+
+.add-status.error { color: #8a2c2c; }
+.add-status.working { color: #6b6b6b; }
 """
 
 
@@ -135,6 +185,51 @@ def _book_card(entry: dict, href_fmt: str) -> str:
     """
 
 
+_ADD_FORM_SCRIPT = """
+<script>
+  const form = document.getElementById('addForm');
+  const input = document.getElementById('videoUrl');
+  const button = document.getElementById('addBtn');
+  const status = document.getElementById('addStatus');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = input.value.trim();
+    if (!url) return;
+
+    button.disabled = true;
+    status.className = 'add-status working';
+    // Gemini has to actually watch the video before responding, which
+    // can genuinely take a while for a real lecture — this message
+    // exists specifically so the person doesn't think it's frozen or
+    // broken during that wait.
+    status.textContent = 'Generating notes... this can take a minute for longer videos.';
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Generation failed.');
+      }
+
+      status.className = 'add-status';
+      status.textContent = `Added "${data.title}" — refreshing shelf...`;
+      window.location.reload();
+    } catch (err) {
+      status.className = 'add-status error';
+      status.textContent = err.message;
+      button.disabled = false;
+    }
+  });
+</script>
+"""
+
+
 def render_shelf_html(entries: list, href_fmt: str = "notes/{video_id}.html") -> str:
     """
     href_fmt controls how book links are built — defaults to the static
@@ -144,6 +239,14 @@ def render_shelf_html(entries: list, href_fmt: str = "notes/{video_id}.html") ->
     this as a parameter rather than hardcoding either format means this
     same render function works unchanged for both the static CLI
     workflow and the web app.
+
+    The add-video form (paste a URL, POST to /api/generate) only
+    actually functions when this page is served by the FastAPI app —
+    that endpoint doesn't exist for the static-file CLI workflow. It's
+    included unconditionally anyway: harmless to show in static mode
+    (submitting just fails with a network error), and this page's real
+    purpose going forward is being served by the app, not opened as a
+    bare file — see docs/ROADMAP.md Step 6.
     """
     if not entries:
         body = '<p class="empty-shelf">No books yet — generate some notes first.</p>'
@@ -162,7 +265,15 @@ def render_shelf_html(entries: list, href_fmt: str = "notes/{video_id}.html") ->
 <body>
   <h1 class="shelf-title">Virtual Shelf</h1>
   <p class="shelf-subtitle">{len(entries)} book{'s' if len(entries) != 1 else ''} on the shelf</p>
+
+  <form class="add-form" id="addForm">
+    <input type="url" id="videoUrl" placeholder="Paste a YouTube lecture link..." required>
+    <button type="submit" id="addBtn">Add to Shelf</button>
+  </form>
+  <p class="add-status" id="addStatus"></p>
+
   {body}
+{_ADD_FORM_SCRIPT}
 </body>
 </html>
 """
