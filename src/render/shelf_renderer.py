@@ -122,11 +122,11 @@ def _color_for(video_id: str) -> str:
     return _SPINE_COLORS[index]
 
 
-def _book_card(entry: dict) -> str:
+def _book_card(entry: dict, href_fmt: str) -> str:
     video_id = entry["video_id"]
     title = entry["title"]
     color = _color_for(video_id)
-    href = f"notes/{video_id}.html"
+    href = href_fmt.format(video_id=video_id)
 
     return f"""
     <a class="book" href="{_esc(href)}">
@@ -135,11 +135,20 @@ def _book_card(entry: dict) -> str:
     """
 
 
-def render_shelf_html(entries: list) -> str:
+def render_shelf_html(entries: list, href_fmt: str = "notes/{video_id}.html") -> str:
+    """
+    href_fmt controls how book links are built — defaults to the static
+    file layout (src/main.py writes each note to output/notes/<id>.html).
+    The Step 5 FastAPI app passes "/notes/{video_id}" instead, since it
+    serves notes as dynamic routes rather than files on disk. Keeping
+    this as a parameter rather than hardcoding either format means this
+    same render function works unchanged for both the static CLI
+    workflow and the web app.
+    """
     if not entries:
         body = '<p class="empty-shelf">No books yet — generate some notes first.</p>'
     else:
-        cards = "".join(_book_card(e) for e in entries)
+        cards = "".join(_book_card(e, href_fmt) for e in entries)
         body = f'<div class="shelf">{cards}</div>'
 
     return f"""<!DOCTYPE html>
