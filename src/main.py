@@ -92,6 +92,9 @@ def main():
     parser = argparse.ArgumentParser(description="Virtual Shelf — Step 1: video to notes")
     parser.add_argument("--url", required=True, help="YouTube lecture URL")
     parser.add_argument(
+        "--shelf", default="General", help="Library shelf/subject to file this under"
+    )
+    parser.add_argument(
         "--force", action="store_true", help="Bypass cache, force regeneration"
     )
     args = parser.parse_args()
@@ -99,7 +102,7 @@ def main():
     config = load_config()
     generator = NotesGenerator(config)
 
-    result = generator.generate_from_url(args.url, force=args.force)
+    result = generator.generate_from_url(args.url, shelf=args.shelf, force=args.force)
 
     print_notes(result)
 

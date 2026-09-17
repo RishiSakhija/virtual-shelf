@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from generation.notes_generator import NotesGenerator
 from library.library_index import LibraryIndex
 from render.notes_renderer import render_notes_html
-from render.shelf_renderer import render_shelf_html
+from render.shelf_renderer import render_library_home_html, render_shelf_html, slugify_shelf
 
 load_dotenv()
 
@@ -51,20 +51,35 @@ app = FastAPI(title="Virtual Shelf API")
 
 class GenerateRequest(BaseModel):
     url: str
+    shelf: str = "General"
+
+
+class RenameShelfRequest(BaseModel):
+    old_name: str
+    new_name: str
+
+
+class DeleteShelfRequest(BaseModel):
+    name: str
+
+
+class MoveBookRequest(BaseModel):
+    video_id: str
+    new_shelf: str
 
 
 @app.post("/api/generate")
 def generate_notes(req: GenerateRequest):
     """
-    Triggers generation for a video URL — same cache-first behavior as
-    the CLI (cache hit = free, cache miss = real Gemini call). Returns
-    just a status + title rather than the full note JSON; the actual
-    rendered page is fetched separately via GET /notes/{video_id}, which
-    keeps this endpoint fast and avoids sending the same large payload
-    twice (once here, once when the note page is opened).
+    Triggers generation for a video URL, filed under the given shelf —
+    same cache-first behavior as the CLI (cache hit = free, cache miss =
+    real Gemini call). Returns just a status + title rather than the
+    full note JSON; the actual rendered page is fetched separately via
+    GET /notes/{video_id}, which keeps this endpoint fast and avoids
+    sending the same large payload twice.
     """
     try:
-        data = generator.generate_from_url(req.url)
+        data = generator.generate_from_url(req.url, shelf=req.shelf)
     except ValueError as e:
         # extract_video_id raises ValueError for a malformed URL — a
         # client mistake, not a server problem, hence 400 not 500.
@@ -77,13 +92,46 @@ def generate_notes(req: GenerateRequest):
     return {"status": "ok", "title": data["title"]}
 
 
+@app.post("/api/shelf/rename")
+def rename_shelf(req: RenameShelfRequest):
+    count = library.rename_shelf(req.old_name, req.new_name)
+    return {"status": "ok", "moved": count}
+
+
+@app.post("/api/shelf/delete")
+def delete_shelf(req: DeleteShelfRequest):
+    """Un-shelves every book on this shelf back to General — never
+    deletes the underlying generated notes (see library_index.py)."""
+    count = library.delete_shelf(req.name)
+    return {"status": "ok", "moved": count}
+
+
+@app.post("/api/book/move")
+def move_book(req: MoveBookRequest):
+    found = library.move_entry(req.video_id, req.new_shelf)
+    if not found:
+        raise HTTPException(status_code=404, detail="Book not found in library")
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
-def shelf():
-    entries = library.list_all()
-    # "/notes/{video_id}" (a route), not "notes/{video_id}.html" (a file
-    # path) — the one line that actually differs from the CLI's static
-    # output/shelf.html, made possible by shelf_renderer's href_fmt param.
-    return render_shelf_html(entries, href_fmt="/notes/{video_id}")
+def library_home():
+    shelves = library.list_shelves()
+    return render_library_home_html(shelves, shelf_href_fmt="/shelf/{shelf_slug}")
+
+
+@app.get("/shelf/{shelf_slug}", response_class=HTMLResponse)
+def shelf_page(shelf_slug: str):
+    # Slugs are derived (lossy) from shelf names, so resolve back to the
+    # real name by matching slugs — there's no separate stored mapping
+    # since shelves aren't their own record (see library_index.py).
+    shelves = library.list_shelves()
+    match = next((s for s in shelves if slugify_shelf(s["name"]) == shelf_slug), None)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+
+    entries = library.list_by_shelf(match["name"])
+    return render_shelf_html(entries, match["name"], href_fmt="/notes/{video_id}", home_href="/")
 
 
 @app.get("/notes/{video_id}", response_class=HTMLResponse)

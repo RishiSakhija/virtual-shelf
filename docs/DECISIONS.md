@@ -98,3 +98,26 @@ turn. The "different page sizes" bug this scroll-snap version originally
 had is now properly fixed too, with a FIXED height (not max-height) on
 `.sheet-inner` — a fix fully within our own CSS, not dependent on a
 library we can't fully control.
+
+## 10. Personal-library model: named shelves, not one flat book list
+**Why:** decided [this session] — a real home library has multiple
+shelves by subject, not one shelf holding every book. Shelves are NOT a
+separate stored entity — a shelf exists exactly when one or more library
+entries reference its name (see library_index.py). This keeps the data
+model to one file/one list rather than needing a second collection kept
+in sync, at the cost of shelves having no metadata of their own (icon,
+description, order) — acceptable until that's actually needed.
+Assignment is fully manual (the person types the shelf name when adding
+a video, with existing names offered via a datalist for convenience) —
+no AI auto-detection of subject, a deliberate scope choice matching what
+was actually asked for.
+**Rename/delete/move semantics:** deleting a shelf never deletes the
+underlying generated notes — those cost a real Gemini call to produce,
+so an organizational mistake shouldn't destroy them. Deletion is
+implemented as a rename to the default "General" shelf. Renaming a
+shelf to an already-existing name merges the two, which isn't a special
+case — it falls out naturally from shelf membership being nothing more
+than a matching string.
+**Cost:** rename/delete/move UI is plain `prompt()`/`confirm()` browser
+dialogs, not custom styled modals — a deliberate functional-first pass,
+with visual polish explicitly deferred to a later, separate task.
