@@ -63,6 +63,10 @@ class DeleteShelfRequest(BaseModel):
     name: str
 
 
+class CreateShelfRequest(BaseModel):
+    name: str
+
+
 class MoveBookRequest(BaseModel):
     video_id: str
     new_shelf: str
@@ -92,6 +96,16 @@ def generate_notes(req: GenerateRequest):
     return {"status": "ok", "title": data["title"]}
 
 
+@app.post("/api/shelf/create")
+def create_shelf(req: CreateShelfRequest):
+    """Empty shelf, no book required — for filing existing books into a
+    new category via Move, without generating a new video first."""
+    created = library.create_shelf(req.name)
+    if not created:
+        raise HTTPException(status_code=400, detail="Shelf name is blank or already exists")
+    return {"status": "ok"}
+
+
 @app.post("/api/shelf/rename")
 def rename_shelf(req: RenameShelfRequest):
     count = library.rename_shelf(req.old_name, req.new_name)
@@ -117,6 +131,10 @@ def move_book(req: MoveBookRequest):
 @app.get("/", response_class=HTMLResponse)
 def library_home():
     shelves = library.list_shelves()
+    # The tree view shows real book-spine bars per shelf, so each shelf
+    # needs its actual entries attached, not just a count.
+    for s in shelves:
+        s["entries"] = library.list_by_shelf(s["name"])
     return render_library_home_html(shelves, shelf_href_fmt="/shelf/{shelf_slug}")
 
 
@@ -144,5 +162,8 @@ def note(video_id: str):
     # Cache hit in the overwhelming common case — this only triggers a
     # real Gemini call if the library somehow references a video whose
     # cache entry is missing (e.g. cache was manually cleared).
-    data = generator.generate_from_url(entry["url"])
+    try:
+        data = generator.generate_from_url(entry["url"])
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Could not load this note: {e}")
     return render_notes_html(data)

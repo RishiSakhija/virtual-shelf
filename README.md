@@ -1,4 +1,4 @@
-# Virtual Shelf
+  # Virtual Shelf
 
 YouTube lectures + PDFs → structured notes with auto-generated Mermaid diagrams,
 in a bookshelf UI with a handwritten-note aesthetic.
