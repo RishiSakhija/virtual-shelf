@@ -82,12 +82,12 @@ _MERMAID_SCRIPT = (
 
 _CSS = """
 :root {
-  --paper: #fdfcf3;
-  --ink: #2b2b2b;
-  --ink-soft: #45494a;
-  --line: #b9d4e8;
-  --margin-line: #e2a3a3;
-  --accent: #2c5f7c;
+  --paper: #f5ecd8;
+  --ink: #3a2e1f;
+  --ink-soft: #5a4a38;
+  --line: #d8c9a0;
+  --margin-line: #b5581f;
+  --accent: #a5541f;
   --page-w: 595px;
   --page-h: 842px;
 }
@@ -108,10 +108,25 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #e7e2d6;
+  background: radial-gradient(ellipse at 50% 0%, #3a2a1a 0%, #1a120b 60%, #0d0906 100%);
   font-family: 'Kalam', cursive;
   color: var(--ink);
 }
+
+.back-link {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  color: #d8a44a;
+  text-decoration: none;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85em;
+  background: rgba(26,18,11,0.7);
+  padding: 6px 14px;
+  border-radius: 999px;
+  z-index: 20;
+}
+.back-link:hover { background: rgba(26,18,11,0.9); }
 
 .book-wrap {
   height: 100vh;
@@ -127,7 +142,17 @@ html, body {
   height: var(--page-h);
   overflow-x: auto;
   overflow-y: hidden;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  /* Defensive: same warm paper color as .flow's own background, as a
+     fallback layer directly underneath it. .book sits inside a
+     transform-style:preserve-3d context (needed for the page-turn tilt
+     animation below) — 3D compositing contexts can sometimes cause a
+     descendant's complex background (multi-column + layered gradients)
+     to fail to paint correctly in some browsers, exposing whatever's
+     behind it instead. If that's what's happening, this ensures the
+     correct warm color shows through regardless, rather than the dark
+     page background bleeding in. */
+  background: var(--paper);
+  box-shadow: 0 0 50px rgba(244,228,160,0.15), 0 10px 30px rgba(0,0,0,0.5);
   transition: transform 0.28s ease, box-shadow 0.28s ease;
   transform-style: preserve-3d;
 }
@@ -182,13 +207,7 @@ html, body {
      bleed between the cover and page 1 (see docs/DECISIONS.md #9) —
      that failure mode doesn't exist here at all. */
   height: calc(var(--page-h) - 60px);
-  background: linear-gradient(135deg, var(--accent), #1d4054);
-  color: #fdfcf3;
-}
-
-.title-block h1.title,
-.title-block p.overview {
-  color: #fdfcf3;
+  border-top: 8px solid #c17a2c;
 }
 
 h1.title {
@@ -279,7 +298,8 @@ pre.mermaid {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(43, 43, 43, 0.85);
+  background: rgba(26, 18, 11, 0.9);
+  border: 1px solid rgba(244,228,160,0.25);
   color: #fdfcf3;
   padding: 10px 20px;
   border-radius: 999px;
@@ -333,7 +353,7 @@ pre.mermaid {
    container — browsers don't paginate horizontal overflow for print.
    @page sets true A4 dimensions for the exported PDF itself. */
 @media print {
-  .nav, .export-btn { display: none; }
+  .nav, .export-btn, .back-link { display: none; }
   html, body { overflow: visible; height: auto; background: white; }
   .book-wrap { height: auto; width: auto; display: block; perspective: none; }
   .book { width: auto; height: auto; overflow: visible; box-shadow: none; transform: none !important; }
@@ -522,6 +542,7 @@ def render_notes_html(data: dict) -> str:
 <style>{_CSS}</style>
 </head>
 <body>
+  <a href="/" class="back-link">&larr; Back to Library</a>
   <div class="book-wrap">
     <div class="book">
       <div class="flow">
